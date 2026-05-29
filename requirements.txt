@@ -1,0 +1,17 @@
+# Core causal inference
+networkx>=3.2
+dowhy>=0.11
+pandas>=2.1
+numpy>=1.26
+
+# LLM client
+anthropic>=0.40
+python-dotenv>=1.0
+
+# Utilities
+pydantic>=2.6
+tqdm>=4.66
+
+# Dev
+pytest>=8.0
+ipykernel>=6.29
