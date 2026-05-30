@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Causa — The Four Components (§C–§E)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_shared.css">
+<style>
+  .comp-grid {
+    margin-top: 22px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+  }
+  .comp {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 24px 26px;
+    position: relative;
+  }
+  .comp .badge {
+    position: absolute;
+    top: 18px; right: 22px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--luminate-primary);
+    background: var(--luminate-light);
+    padding: 4px 10px;
+    border-radius: 999px;
+  }
+  .comp .num {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, var(--luminate-primary), var(--luminate-medium));
+    color: white;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 14px;
+  }
+  .comp h2 {
+    font-size: 20px;
+    color: var(--ink-strong);
+    margin-bottom: 6px;
+    font-weight: 700;
+  }
+  .comp .sub {
+    font-size: 13px;
+    color: var(--ink-muted);
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+  .comp .role {
+    margin-top: 14px;
+    background: var(--surface-2);
+    border-left: 4px solid var(--luminate-primary);
+    border-radius: 0 8px 8px 0;
+    padding: 12px 14px;
+    font-size: 12.5px;
+    color: var(--ink);
+    line-height: 1.55;
+  }
+  .comp .role strong { color: var(--luminate-primary); }
+  .signals {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 12px;
+  }
+
+  .interconnect {
+    margin-top: 28px;
+    background: linear-gradient(180deg, white 0%, var(--surface-2) 100%);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 22px 26px;
+  }
+  .interconnect h3 {
+    font-size: 14px;
+    color: var(--luminate-primary);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .flow-row {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr 1.2fr 1fr 1.2fr;
+    gap: 14px;
+    align-items: center;
+    text-align: center;
+  }
+  .flow-row .stage {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px 16px;
+  }
+  .flow-row .stage .nm {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 12.5px;
+    color: var(--luminate-primary);
+    margin-bottom: 4px;
+  }
+  .flow-row .stage .ds { font-size: 11px; color: var(--ink-muted); }
+  .flow-row .arrow {
+    font-size: 26px; color: var(--luminate-primary);
+  }
+</style>
+</head>
+<body>
+<div class="canvas">
+
+  <div class="title-block">
+    <div class="left">
+      <div class="figure-tag">Figure 14 — Architecture</div>
+      <h1>The Four Components of Causa</h1>
+      <p class="subtitle">The dissertation's §C–§E decomposition, mapped to Python modules</p>
+    </div>
+    <div class="brand-pill">Causa · §C–§E</div>
+  </div>
+
+  <div class="comp-grid">
+
+    <div class="comp">
+      <div class="badge">§C1</div>
+      <div class="num">1</div>
+      <h2>Causal Graph Specification</h2>
+      <p class="sub">A typed, DAG-validated representation of the SCM. Hand-authored for the debugging domain; LLM-extracted for novel domains.</p>
+      <div class="role">
+        <strong>Code:</strong> <code>causa.core.graph</code>, <code>causa.core.scm</code>, <code>causa.domain.scm_debugging</code>, <code>causa.extraction.llm_extractor</code>.
+      </div>
+      <div class="signals">
+        <span class="chip purple">hand-authored DAG</span>
+        <span class="chip blue">LLM-extracted DAG</span>
+        <span class="chip green">cycle filtering</span>
+      </div>
+    </div>
+
+    <div class="comp">
+      <div class="badge">§C2</div>
+      <div class="num">2</div>
+      <h2>Identifiable Action Scorer</h2>
+      <p class="sub">Pearl's back-door criterion + a plug-in linear estimator. Falls back to LLM cold-start when data is sparse.</p>
+      <div class="role">
+        <strong>Code:</strong> <code>causa.core.identifiability</code>, <code>causa.adapters.estimators.linear_regression</code>, <code>causa.planning.dowhy_scorer</code>, <code>causa.planning.llm_scorer</code>.
+      </div>
+      <div class="signals">
+        <span class="chip purple">do-calculus</span>
+        <span class="chip green">DoWhy adapter</span>
+        <span class="chip amber">LLM cold-start</span>
+      </div>
+    </div>
+
+    <div class="comp">
+      <div class="badge">§D2</div>
+      <div class="num">3</div>
+      <h2>Causal Planning Agent</h2>
+      <p class="sub">The decision loop that consumes scorer rankings, invokes tools, accumulates SCM-shaped observations, and reports a typed result.</p>
+      <div class="role">
+        <strong>Code:</strong> <code>causa.agents.base.BaseAgent</code>, <code>causa.agents.causal.CausalPlanningAgent</code>, <code>causa.adapters.history.pandas_history</code>, <code>causa.adapters.tools</code>.
+      </div>
+      <div class="signals">
+        <span class="chip purple">decision loop</span>
+        <span class="chip blue">step trace</span>
+        <span class="chip green">success threshold</span>
+      </div>
+    </div>
+
+    <div class="comp">
+      <div class="badge">§E1</div>
+      <div class="num">4</div>
+      <h2>Counterfactual Reflection Module</h2>
+      <p class="sub">Detects discrepancies between SCM predictions and observed outcomes; injects LLM-derived synthetic data to keep the SCM honest under shift.</p>
+      <div class="role">
+        <strong>Code:</strong> <code>causa.reflection.module.CounterfactualReflectionModule</code>, <code>causa.adapters.threshold.{StaticThreshold,AdaptiveMedianThreshold}</code>.
+      </div>
+      <div class="signals">
+        <span class="chip pink">discrepancy</span>
+        <span class="chip amber">adaptive θ</span>
+        <span class="chip purple">synthetic rows</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="interconnect">
+    <h3>How the four components compose at runtime</h3>
+    <div class="flow-row">
+      <div class="stage"><div class="nm">SCM (1)</div><div class="ds">graph + variables + roles</div></div>
+      <div class="arrow">⟶</div>
+      <div class="stage"><div class="nm">Scorer (2)</div><div class="ds">ranks candidate actions</div></div>
+      <div class="arrow">⟶</div>
+      <div class="stage"><div class="nm">Agent (3)</div><div class="ds">acts &amp; records</div></div>
+    </div>
+    <div class="flow-row" style="margin-top: 14px;">
+      <div class="stage"><div class="nm">Trace</div><div class="ds">JSONL event stream</div></div>
+      <div class="arrow">⟵</div>
+      <div class="stage"><div class="nm">CRM (4)</div><div class="ds">δ &gt; θ → synthetic rows</div></div>
+      <div class="arrow">⟵</div>
+      <div class="stage"><div class="nm">History</div><div class="ds">pandas SCM-shaped rows</div></div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--luminate-primary);"></div>component</div>
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--luminate-light); border: 1px solid var(--luminate-primary);"></div>chapter ref</div>
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--surface-2);"></div>module link</div>
+  </div>
+
+  <div class="footer-note">
+    Each component is independently testable — see <strong>tests/unit/test_scm.py</strong>, <strong>test_identifiability.py</strong>, <strong>test_agents.py</strong>, <strong>test_reflection.py</strong>.
+  </div>
+
+</div>
+</body>
+</html>

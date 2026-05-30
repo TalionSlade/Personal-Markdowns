@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Causa — Telemetry &amp; Trace Event Flow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_shared.css">
+<style>
+  .topology {
+    margin-top: 20px;
+    position: relative;
+    height: 360px;
+    background:
+      linear-gradient(180deg, rgba(60,34,138,0.04), transparent 80%),
+      var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    overflow: hidden;
+  }
+  .swim {
+    position: absolute;
+    left: 64px; right: 64px;
+    border-top: 1px dashed var(--line);
+    color: var(--ink-faint);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .swim .name {
+    position: absolute;
+    top: -10px;
+    left: -56px;
+    background: var(--surface-2);
+    padding: 0 8px;
+  }
+  .swim.s1 { top: 88px; }
+  .swim.s2 { top: 196px; }
+  .swim.s3 { top: 304px; }
+
+  .pill {
+    position: absolute;
+    background: white;
+    border: 2px solid var(--luminate-primary);
+    color: var(--luminate-primary);
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 12px;
+    padding: 10px 14px;
+    border-radius: 999px;
+    box-shadow: 0 6px 14px -8px rgba(19,1,74,0.25);
+    z-index: 2;
+  }
+  .pill .sub {
+    display: block;
+    font-family: 'Inter', sans-serif;
+    font-size: 10.5px;
+    font-weight: 500;
+    color: var(--ink-muted);
+    margin-top: 1px;
+  }
+  .pill.ext { border-color: var(--causal-mediator); color: var(--causal-mediator); background: #fff8e6; }
+  .pill.sink{ border-color: var(--causal-outcome); color: var(--causal-outcome); background: #effaf3; }
+
+  .t-runner   { top: 50px; left: 100px; }
+  .t-observer { top: 160px; left: 480px; }
+  .t-writer   { top: 50px; left: 760px; }
+  .t-jsonl    { top: 160px; left: 1100px; }
+  .t-audit    { top: 270px; left: 760px; }
+  .t-cli      { top: 270px; left: 1100px; }
+
+  .event-grid {
+    margin-top: 24px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  .event {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 18px 20px;
+    border-top: 4px solid var(--luminate-primary);
+  }
+  .event .kind {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--luminate-primary);
+    margin-bottom: 6px;
+  }
+  .event .desc { font-size: 12px; color: var(--ink-muted); margin-bottom: 12px; line-height: 1.5; }
+  .event pre {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    background: var(--surface-2);
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    color: var(--luminate-dark);
+    overflow-x: auto;
+    line-height: 1.45;
+  }
+
+  .audit-summary {
+    margin-top: 22px;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 20px 24px;
+  }
+  .audit-summary h3 {
+    font-size: 13px;
+    color: var(--luminate-primary);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .audit-cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 14px;
+  }
+  .audit-col {
+    background: var(--surface-2);
+    border-left: 4px solid var(--luminate-primary);
+    padding: 12px 14px;
+    border-radius: 0 8px 8px 0;
+  }
+  .audit-col .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--luminate-primary);
+  }
+  .audit-col .lbl { font-size: 11.5px; color: var(--ink-muted); margin-top: 2px; }
+</style>
+</head>
+<body>
+<div class="canvas">
+
+  <div class="title-block">
+    <div class="left">
+      <div class="figure-tag">Figure 08 — Telemetry</div>
+      <h1>Trace Event Flow &amp; Auditable Pipeline</h1>
+      <p class="subtitle">JSON Lines · self-framed · post-hoc <code>TraceAudit</code></p>
+    </div>
+    <div class="brand-pill">Causa · §G2</div>
+  </div>
+
+  <div class="topology">
+
+    <svg class="flow-svg" viewBox="0 0 1572 360" preserveAspectRatio="none">
+      <defs>
+        <marker id="arrow" viewBox="0 0 12 12" refX="9" refY="6" markerWidth="9" markerHeight="9" orient="auto">
+          <path d="M0,0 L10,6 L0,12 Z" fill="#3c228a" opacity="0.7"/>
+        </marker>
+      </defs>
+
+      <!-- runner → observer (on_step, on_task_result) -->
+      <path d="M 270 100 Q 380 160 480 180" class="thick" />
+      <text x="320" y="155">on_step / on_task_result</text>
+
+      <!-- observer → writer -->
+      <path d="M 620 180 Q 700 110 760 100" />
+      <text x="660" y="145">delegate</text>
+
+      <!-- writer → jsonl file -->
+      <path d="M 920 110 Q 1020 130 1100 180" class="thick" />
+      <text x="990" y="135">append</text>
+
+      <!-- jsonl → audit -->
+      <path d="M 1140 220 Q 1020 270 920 290" class="dashed" />
+      <text x="990" y="270">read</text>
+
+      <!-- audit → cli -->
+      <path d="M 920 300 Q 1020 300 1100 300" />
+      <text x="990" y="290">render</text>
+    </svg>
+
+    <div class="swim s1"><span class="name">PRODUCERS</span></div>
+    <div class="swim s2"><span class="name">SINK</span></div>
+    <div class="swim s3"><span class="name">CONSUMERS</span></div>
+
+    <div class="pill t-runner">EvaluationRunner<span class="sub">causa.evaluation.runner</span></div>
+    <div class="pill ext t-observer">RunObserver<span class="sub">protocol — duck-typed</span></div>
+    <div class="pill t-writer">TraceWriter<span class="sub">thread-safe · lazy open</span></div>
+    <div class="pill sink t-jsonl">trace.jsonl<span class="sub">append-only · fsync optional</span></div>
+    <div class="pill t-audit">TraceAudit<span class="sub">causa.telemetry.auditor</span></div>
+    <div class="pill ext t-cli">causa trace-audit<span class="sub">CLI consumer · rich table</span></div>
+
+  </div>
+
+  <div class="event-grid">
+
+    <div class="event">
+      <div class="kind">run_started</div>
+      <p class="desc">Framing event — first line of every trace file. Stamps <code>trace_version</code>, run_id, agent_name, task_count.</p>
+<pre>{
+  "trace_version": 1,
+  "kind": "run_started",
+  "run_id": "1c0fa8e7d4ad",
+  "agent_name": "causal",
+  "task_count": 480,
+  "seed": 42,
+  "timestamp": 1748557812.41
+}</pre>
+    </div>
+
+    <div class="event">
+      <div class="kind">step</div>
+      <p class="desc">One per agent iteration. Carries full ranking + chosen action + adjustment set + outcome — the unit the auditor &amp; explainability rubric ingest.</p>
+<pre>{
+  "kind": "step",
+  "task_id": "swe-bench/abc123",
+  "step_index": 2,
+  "history_size": 38,
+  "chosen_action": "run_tests",
+  "scores": [
+    {"action": "run_tests",
+     "score": 0.73,
+     "rationale": "via back-door {…}",
+     "adjustment_set": ["…"]}
+  ],
+  "outcome": 0.62,
+  "reflection": "appended synthetic row(s)",
+  "elapsed_seconds": 1.84
+}</pre>
+    </div>
+
+    <div class="event">
+      <div class="kind">task_result &amp; run_finished</div>
+      <p class="desc">Per-task summary, then a single closing event. Auditor counts the closing event to detect a clean run vs a crashed one.</p>
+<pre>{
+  "kind": "task_result",
+  "task_id": "swe-bench/abc123",
+  "outcome": "solved",
+  "final_outcome_score": 1.0,
+  "n_steps": 3,
+  "error": null
+}
+{ "kind": "run_finished",
+  "run_id": "1c0fa8e7d4ad" }</pre>
+    </div>
+
+  </div>
+
+  <div class="audit-summary">
+    <h3>Sample <code>TraceAudit</code> output</h3>
+    <div class="audit-cols">
+      <div class="audit-col">
+        <div class="num">480</div>
+        <div class="lbl">tasks completed</div>
+      </div>
+      <div class="audit-col">
+        <div class="num">1,406</div>
+        <div class="lbl">step events</div>
+      </div>
+      <div class="audit-col">
+        <div class="num">112</div>
+        <div class="lbl">cold-start LLM steps</div>
+      </div>
+      <div class="audit-col">
+        <div class="num">1,294</div>
+        <div class="lbl">steady-state DoWhy steps</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--luminate-primary);"></div>internal</div>
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--causal-mediator);"></div>protocol/consumer</div>
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--causal-outcome);"></div>persistent sink</div>
+  </div>
+
+  <div class="footer-note">
+    Schema: <strong>TRACE_VERSION = 1</strong> · adding fields safe · renaming/removing requires bump
+  </div>
+
+</div>
+</body>
+</html>

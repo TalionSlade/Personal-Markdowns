@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Causa — Do-Calculus Pipeline (Identification → Estimation → Scoring)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_shared.css">
+<style>
+  .stage {
+    display: grid;
+    grid-template-columns: 1.05fr 1fr 1fr 1fr;
+    gap: 22px;
+    margin-top: 22px;
+    position: relative;
+  }
+  .step {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 18px 20px;
+    position: relative;
+    z-index: 1;
+  }
+  .step .head {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 8px;
+  }
+  .step .head .num {
+    width: 32px; height: 32px;
+    background: var(--luminate-primary);
+    color: white;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+  }
+  .step .head .title { font-size: 16px; font-weight: 700; color: var(--ink-strong); }
+  .step .path {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--ink-muted);
+    background: var(--luminate-light);
+    padding: 4px 8px;
+    border-radius: 6px;
+    display: inline-block;
+    margin-bottom: 12px;
+  }
+  .step .summary {
+    font-size: 12.5px;
+    color: var(--ink);
+    line-height: 1.55;
+    margin-bottom: 12px;
+  }
+  .code-block {
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    line-height: 1.5;
+    color: var(--luminate-dark);
+    overflow-x: auto;
+    white-space: pre;
+  }
+  .step-arrow {
+    position: absolute;
+    top: 50%;
+    width: 22px;
+    transform: translateY(-50%);
+    z-index: 0;
+  }
+
+  .pipe-svg { width: 100%; height: 60px; margin-top: 12px; }
+
+  .examples {
+    margin-top: 26px;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 22px 24px;
+  }
+  .examples h3 {
+    font-size: 15px;
+    color: var(--luminate-primary);
+    margin-bottom: 10px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .scenario-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  .scenario {
+    border-left: 4px solid var(--luminate-primary);
+    background: var(--surface-2);
+    padding: 12px 14px;
+    border-radius: 0 8px 8px 0;
+  }
+  .scenario .title { font-size: 13px; font-weight: 700; color: var(--ink-strong); margin-bottom: 6px; }
+  .scenario .row {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink);
+    margin: 3px 0;
+  }
+  .scenario .row span.k { color: var(--luminate-primary); font-weight: 600; }
+
+  .arrow-strip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 24px 8px;
+    padding: 16px 24px;
+    background: linear-gradient(90deg, var(--luminate-light) 0%, transparent 50%, var(--luminate-light) 100%);
+    border-radius: 12px;
+  }
+  .arrow-strip .ph {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--luminate-primary);
+    letter-spacing: 0.06em;
+  }
+  .arrow-strip .glyph { font-size: 22px; color: var(--luminate-primary); }
+</style>
+</head>
+<body>
+<div class="canvas">
+
+  <div class="title-block">
+    <div class="left">
+      <div class="figure-tag">Figure 03 — Algorithm</div>
+      <h1>The Do-Calculus Action-Scoring Pipeline</h1>
+      <p class="subtitle">Identify → Estimate → Score — the causal core of <code>DoWhyActionScorer</code></p>
+    </div>
+    <div class="brand-pill">Causa · §D1</div>
+  </div>
+
+  <div class="arrow-strip">
+    <span class="ph">SCM + candidate action a</span>
+    <span class="glyph">⟶</span>
+    <span class="ph">ActionScore (point estimate + rationale)</span>
+  </div>
+
+  <div class="stage">
+
+    <div class="step">
+      <div class="head"><div class="num">1</div><div class="title">Identify</div></div>
+      <div class="path">causa.core.identifiability</div>
+      <p class="summary">Apply Pearl's back-door criterion to the SCM graph for the (action, outcome) pair. Returns the <strong>minimal admissible set Z</strong> — or signals non-identifiability.</p>
+      <div class="code-block">result = identify_effect(
+    graph, treatment="X",
+    outcome="Y",
+)
+result.identifiable        # bool
+result.adjustment_set      # frozenset[str]
+result.method              # "back-door"</div>
+    </div>
+
+    <div class="step">
+      <div class="head"><div class="num">2</div><div class="title">Estimate</div></div>
+      <div class="path">causa.adapters.estimators.linear_regression</div>
+      <p class="summary">Plug Z into the back-door adjustment formula. Adapter implements <code>EffectEstimator</code>; swappable for DML or doubly-robust estimators without touching scorer.</p>
+      <div class="code-block">est = LinearRegressionEstimator()
+est.estimate(
+    data, treatment="X", outcome="Y",
+    treatment_value=a,
+    adjustment_set=Z,
+)
+# → EffectEstimate(value, ci, method)</div>
+    </div>
+
+    <div class="step">
+      <div class="head"><div class="num">3</div><div class="title">Rank</div></div>
+      <div class="path">causa.planning.dowhy_scorer</div>
+      <p class="summary">For every action candidate, take E[Y | do(X=a)] − E[Y | do(X=baseline)]. Convert to <code>ActionScore</code> with the back-door set surfaced in <em>rationale</em>.</p>
+      <div class="code-block">for c in candidates:
+    yhat = estimator.estimate(...)
+    yield ActionScore(
+        action=c,
+        score=yhat.value,
+        rationale=f"via back-door {sorted(Z)}",
+        adjustment_set=Z,
+    )</div>
+    </div>
+
+    <div class="step">
+      <div class="head"><div class="num">4</div><div class="title">Audit</div></div>
+      <div class="path">causa.telemetry.events / TraceAudit</div>
+      <p class="summary">Every score lands in the JSON Lines trace with <em>scores, chosen_action, adjustment_set, rationale</em>. Post-hoc auditor classifies steps as cold-start vs steady-state.</p>
+      <div class="code-block">audit = audit_trace(trace_path)
+audit.steady_state_steps   # via back-door
+audit.cold_start_steps     # [cold-start LLM]
+audit.reflection_triggers  # synthetic rows</div>
+    </div>
+
+  </div>
+
+  <div class="examples">
+    <h3>Worked Examples — three SCMs, three identification answers</h3>
+    <div class="scenario-grid">
+
+      <div class="scenario">
+        <div class="title">Toy 3-node confounded SCM</div>
+        <div class="row"><span class="k">graph:</span> Z → X, Z → Y, X → Y</div>
+        <div class="row"><span class="k">treatment:</span> X</div>
+        <div class="row"><span class="k">outcome:</span> Y</div>
+        <div class="row"><span class="k">adjustment_set:</span> {Z}</div>
+        <div class="row"><span class="k">recovered effect:</span> 0.503 ± 0.05</div>
+        <div class="row" style="margin-top: 6px; color: var(--green); font-weight: 600;">✓ identifiable</div>
+      </div>
+
+      <div class="scenario">
+        <div class="title">Debugging SCM, tool selection</div>
+        <div class="row"><span class="k">treatment:</span> tool_selected</div>
+        <div class="row"><span class="k">outcome:</span> tests_passed</div>
+        <div class="row"><span class="k">adjustment_set:</span> {error_message_type, codebase_structure, context_available}</div>
+        <div class="row" style="margin-top: 6px; color: var(--green); font-weight: 600;">✓ identifiable</div>
+      </div>
+
+      <div class="scenario">
+        <div class="title">Unmeasured confounder (counter-example)</div>
+        <div class="row"><span class="k">graph:</span> U → X, U → Y, X → Y</div>
+        <div class="row"><span class="k">U is latent (not in DAG)</span></div>
+        <div class="row" style="color: var(--red); font-weight: 600; margin-top: 6px;">✗ NOT identifiable</div>
+        <div class="row" style="color: var(--ink-muted);">scorer falls back to <code>LLMActionScorer</code> (cold-start)</div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--green);"></div>Identifiable</div>
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--red);"></div>Non-identifiable</div>
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--luminate-primary);"></div>Pipeline phase</div>
+  </div>
+
+  <div class="footer-note">
+    Reference: <strong>Pearl (2009) Causality, Ch. 3</strong> · do-calculus rule 2 (back-door adjustment) · ported via DoWhy
+  </div>
+
+</div>
+</body>
+</html>

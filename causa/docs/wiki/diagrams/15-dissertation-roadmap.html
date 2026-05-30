@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Causa — Dissertation Roadmap</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_shared.css">
+<style>
+  .roadmap {
+    margin-top: 22px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 22px;
+  }
+  .section {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 18px 20px;
+    position: relative;
+  }
+  .section .tag {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    font-weight: 700;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 4px;
+    margin-bottom: 6px;
+    background: var(--luminate-primary);
+  }
+  .section.theory  .tag { background: var(--causal-confounder); }
+  .section.system  .tag { background: var(--causal-treatment); }
+  .section.eval    .tag { background: var(--causal-mediator); }
+  .section.results .tag { background: var(--causal-outcome); }
+
+  .section .title {
+    font-size: 14.5px;
+    font-weight: 700;
+    color: var(--ink-strong);
+    margin-bottom: 8px;
+  }
+  .section .what {
+    font-size: 12px;
+    color: var(--ink-muted);
+    margin-bottom: 10px;
+    line-height: 1.5;
+  }
+  .section .code {
+    background: var(--surface-2);
+    border-left: 3px solid var(--luminate-primary);
+    padding: 8px 10px;
+    border-radius: 0 6px 6px 0;
+    margin-bottom: 8px;
+  }
+  .section.theory  .code { border-left-color: var(--causal-confounder); }
+  .section.system  .code { border-left-color: var(--causal-treatment); }
+  .section.eval    .code { border-left-color: var(--causal-mediator); }
+  .section.results .code { border-left-color: var(--causal-outcome); }
+  .section .code .lbl {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+  .section .code .ref {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--ink-strong);
+  }
+  .section .figure {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--luminate-primary);
+    background: var(--luminate-light);
+    padding: 4px 8px;
+    border-radius: 4px;
+    display: inline-block;
+  }
+
+  .summary-bar {
+    margin-top: 26px;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 22px 28px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+    gap: 18px;
+  }
+  .stat .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--luminate-primary);
+  }
+  .stat .lbl { font-size: 11px; color: var(--ink-muted); margin-top: 4px; letter-spacing: 0.06em; }
+</style>
+</head>
+<body>
+<div class="canvas">
+
+  <div class="title-block">
+    <div class="left">
+      <div class="figure-tag">Figure 15 — Roadmap</div>
+      <h1>Dissertation §A–§N: Module Mapping</h1>
+      <p class="subtitle">Each chapter pinned to its implementing module &amp; supporting diagram</p>
+    </div>
+    <div class="brand-pill">Causa · §A–§N</div>
+  </div>
+
+  <div class="roadmap">
+
+    <div class="section theory">
+      <span class="tag">§A · Introduction</span>
+      <div class="title">Why causal planning for LLM agents?</div>
+      <p class="what">Motivates the gap between LLM tool-use baselines and Pearl-style decision theory under distribution shift.</p>
+      <div class="code"><div class="lbl">supporting code</div><div class="ref">README.md · causa/__init__</div></div>
+      <span class="figure">Figure 01</span>
+    </div>
+
+    <div class="section theory">
+      <span class="tag">§B · Background</span>
+      <div class="title">Pearl SCMs &amp; back-door criterion</div>
+      <p class="what">Formal preliminaries — Definitions 1–4 instantiated by the typed core domain.</p>
+      <div class="code"><div class="lbl">supporting code</div><div class="ref">causa.core.{graph,scm,variables,identifiability}</div></div>
+      <span class="figure">Figure 02</span>
+    </div>
+
+    <div class="section system">
+      <span class="tag">§C1 · Component 1</span>
+      <div class="title">Causal graph specification</div>
+      <p class="what">Hand-authored 9-node debugging DAG + LLM-extracted novel-domain DAGs.</p>
+      <div class="code"><div class="lbl">supporting code</div><div class="ref">causa.domain.scm_debugging · causa.extraction</div></div>
+      <span class="figure">Figure 02, 12, 14</span>
+    </div>
+
+    <div class="section system">
+      <span class="tag">§C2 · Component 2</span>
+      <div class="title">Identifiable action scorer</div>
+      <p class="what">Back-door identification + plug-in linear estimator + LLM cold-start fallback.</p>
+      <div class="code"><div class="lbl">supporting code</div><div class="ref">causa.planning.{dowhy_scorer,llm_scorer}</div></div>
+      <span class="figure">Figure 03, 09, 14</span>
+    </div>
+
+    <div class="section system">
+      <span class="tag">§D2 · Component 3</span>
+      <div class="title">Causal Planning Agent loop</div>
+      <p class="what">Decision–act–observe scaffold shared across all 6 arms via <code>BaseAgent</code>.</p>
+      <div class="code"><div class="lbl">supporting code</div><div class="ref">causa.agents.{base,causal,react,chain_of_thought,no_memory}</div></div>
+      <span class="figure">Figure 04, 05</span>
+    </div>
+
+    <div class="section system">
+      <span class="tag">§E1 · Component 4</span>
+      <div class="title">Counterfactual Reflection Module</div>
+      <p class="what">Adaptive threshold + synthetic-row injection to handle distribution shift.</p>
+      <div class="code"><div class="lbl">supporting code</div><div class="ref">causa.reflection · causa.adapters.threshold</div></div>
+      <span class="figure">Figure 06</span>
+    </div>
+
+    <div class="section eval">
+      <span class="tag">§F · Tools</span>
+      <div class="title">Eight typed debugging actions</div>
+      <p class="what">Registered <code>DebuggingTool</code> adapters: code_search, trace, diff, run_tests, …</p>
+      <div class="code"><div class="lbl">supporting code</div><div class="ref">causa.adapters.tools · causa.ports.tool</div></div>
+      <span class="figure">Figure 04</span>
+    </div>
+
+    <div class="section eval">
+      <span class="tag">§G · Explainability</span>
+      <div class="title">Auditable trace pipeline</div>
+      <p class="what">JSON Lines schema with TRACE_VERSION = 1, post-hoc TraceAudit, human-eval rubric.</p>
+      <div class="code"><div class="lbl">supporting code</div><div class="ref">causa.telemetry.{events,writer,auditor}</div></div>
+      <span class="figure">Figure 08</span>
+    </div>
+
+    <div class="section eval">
+      <span class="tag">§H · Distribution shift</span>
+      <div class="title">4-axis IID vs OOD partitioner</div>
+      <p class="what">Language × framework × bug_type × codebase_size held-out policy.</p>
+      <div class="code"><div class="lbl">supporting code</div><div class="ref">causa.evaluation.partition</div></div>
+      <span class="figure">Figure 07</span>
+    </div>
+
+    <div class="section eval">
+      <span class="tag">§I · Evaluation runner</span>
+      <div class="title">Serial &amp; parallel runner + RunObserver</div>
+      <p class="what">Drives the SWE-bench protocol; same observer surface across paths.</p>
+      <div class="code"><div class="lbl">supporting code</div><div class="ref">causa.evaluation.runner</div></div>
+      <span class="figure">Figure 10, 13</span>
+    </div>
+
+    <div class="section eval">
+      <span class="tag">§J · Ablations</span>
+      <div class="title">6 arms, single agent factory</div>
+      <p class="what">Causal · Causal-no-reflection · LLM-scorer · ReAct · CoT · No-memory.</p>
+      <div class="code"><div class="lbl">supporting code</div><div class="ref">causa.cli.runtime.AgentArm</div></div>
+      <span class="figure">Figure 05</span>
+    </div>
+
+    <div class="section results">
+      <span class="tag">§K · Statistical methods</span>
+      <div class="title">BCa bootstrap &amp; paired permutation</div>
+      <p class="what">SciPy-free implementations — Acklam Φ⁻¹, Phipson-Smyth correction.</p>
+      <div class="code"><div class="lbl">supporting code</div><div class="ref">causa.evaluation.stats</div></div>
+      <span class="figure">Figure 11</span>
+    </div>
+
+    <div class="section results">
+      <span class="tag">§L · Sensitivity</span>
+      <div class="title">LLM &amp; adapter sensitivity</div>
+      <p class="what">Mock-vs-Anthropic, alternative estimators, threshold policies — all single-line adapter swaps.</p>
+      <div class="code"><div class="lbl">supporting code</div><div class="ref">causa.adapters.* · causa.cli.runtime.build_agent</div></div>
+      <span class="figure">Figure 01</span>
+    </div>
+
+    <div class="section results">
+      <span class="tag">§M · Limitations</span>
+      <div class="title">Where the SCM ends &amp; the LLM resumes</div>
+      <p class="what">Unmeasured confounders, identifiability failures, latency under cold-start.</p>
+      <div class="code"><div class="lbl">supporting code</div><div class="ref">causa.planning.llm_scorer (escape hatch)</div></div>
+      <span class="figure">Figure 09</span>
+    </div>
+
+    <div class="section results">
+      <span class="tag">§N · Future work</span>
+      <div class="title">Domain transfer &amp; the LLM extractor</div>
+      <p class="what">Beyond debugging: applying the same pipeline to incident postmortems, ops, scientific discovery.</p>
+      <div class="code"><div class="lbl">supporting code</div><div class="ref">causa.extraction.LLMGraphExtractor</div></div>
+      <span class="figure">Figure 12</span>
+    </div>
+
+  </div>
+
+  <div class="summary-bar">
+    <div class="stat"><div class="num">60+</div><div class="lbl">source modules</div></div>
+    <div class="stat"><div class="num">15</div><div class="lbl">diagrams</div></div>
+    <div class="stat"><div class="num">6</div><div class="lbl">agent arms</div></div>
+    <div class="stat"><div class="num">4</div><div class="lbl">distribution-shift axes</div></div>
+    <div class="stat"><div class="num">~200</div><div class="lbl">pytest assertions</div></div>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--causal-confounder);"></div>theory</div>
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--causal-treatment);"></div>system</div>
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--causal-mediator);"></div>evaluation</div>
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--causal-outcome);"></div>results</div>
+  </div>
+
+  <div class="footer-note">
+    <strong>Arpan Ghosh</strong> · BITS Pilani · M.Tech Dissertation · May 2026 — <em>Causal Planning for LLM Agents: A Framework for Robust Decision-Making Under Distribution Shift</em>
+  </div>
+
+</div>
+</body>
+</html>

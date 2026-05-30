@@ -1,0 +1,104 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "causa"
+version = "0.1.0"
+description = "Causa — Causal Planning for LLM Agents. A reference implementation of Pearl's do-calculus action selection, the Counterfactual Reflection Module, and the Distribution Shift Evaluation Suite, evaluated against SWE-bench."
+authors = [
+  { name = "Arpan Ghosh", email = "arpan.ghosh@bits-pilani.dissertation" },
+]
+license = { text = "MIT" }
+readme = "README.md"
+requires-python = ">=3.10"
+keywords = [
+  "causal-inference",
+  "llm-agents",
+  "do-calculus",
+  "structural-causal-model",
+  "distribution-shift",
+  "swe-bench",
+  "dowhy",
+  "counterfactual-reflection",
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+dependencies = [
+  # Core causal inference
+  "networkx>=3.2",
+  "dowhy>=0.11",
+  "pandas>=2.1",
+  "numpy>=1.26",
+  "scipy>=1.11",
+  "scikit-learn>=1.4",
+
+  # LLM client
+  "anthropic>=0.40",
+  "python-dotenv>=1.0",
+
+  # Validation & config
+  "pydantic>=2.6",
+  "pydantic-settings>=2.2",
+
+  # CLI & UX
+  "typer>=0.12",
+  "rich>=13.7",
+  "tqdm>=4.66",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+  "pytest-cov>=4.1",
+  "pytest-xdist>=3.5",
+  "hypothesis>=6.98",
+  "ruff>=0.4",
+  "mypy>=1.10",
+  "ipykernel>=6.29",
+]
+swebench = [
+  "datasets>=2.18",
+]
+
+[project.scripts]
+causa = "causa.cli.main:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-ra --strict-markers --strict-config"
+markers = [
+  "unit: fast, no I/O, no external services",
+  "integration: requires DoWhy/scipy round-trip",
+  "llm: requires LLM API; off by default",
+  "slow: > 1s expected",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "B", "SIM", "RUF"]
+ignore = ["E501"]  # line length handled by formatter
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+no_implicit_optional = true
+disallow_untyped_defs = true
+files = ["src/causa"]

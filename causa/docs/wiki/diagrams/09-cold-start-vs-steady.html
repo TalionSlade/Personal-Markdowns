@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Causa — Cold-Start LLM vs Steady-State DoWhy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_shared.css">
+<style>
+  .split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 26px;
+    margin-top: 22px;
+  }
+  .lane {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 22px 24px;
+    position: relative;
+  }
+  .lane.cold     { border-top: 5px solid var(--causal-mediator); }
+  .lane.steady   { border-top: 5px solid var(--causal-outcome); }
+  .lane .title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--ink-strong);
+    margin-bottom: 4px;
+  }
+  .lane .sub {
+    font-size: 12.5px;
+    color: var(--ink-muted);
+    margin-bottom: 14px;
+  }
+  .lane .regime {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    margin-bottom: 14px;
+  }
+  .lane.cold .regime   { background: #fff5dd; color: var(--causal-mediator); border: 1px solid rgba(184,123,0,0.25); }
+  .lane.steady .regime { background: #e6f6ec; color: var(--causal-outcome); border: 1px solid rgba(27,142,61,0.25); }
+
+  .lane .step {
+    display: grid;
+    grid-template-columns: 30px 1fr;
+    gap: 12px;
+    align-items: flex-start;
+    margin-bottom: 12px;
+  }
+  .lane .step .n {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--luminate-primary);
+    color: white;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 12px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .lane.cold .step .n   { background: var(--causal-mediator); }
+  .lane.steady .step .n { background: var(--causal-outcome); }
+  .lane .step .text {
+    font-size: 12.5px;
+    color: var(--ink);
+    line-height: 1.5;
+  }
+  .lane .step .text strong { color: var(--ink-strong); }
+  .lane .step .text code   {
+    background: var(--surface-2);
+    padding: 1px 5px;
+    border-radius: 4px;
+    border: 1px solid var(--line);
+  }
+
+  .rationale {
+    margin-top: 14px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    line-height: 1.55;
+  }
+  .lane.cold .rationale   { background: #fff8e6; color: var(--causal-mediator); }
+  .lane.steady .rationale { background: #effaf3; color: var(--causal-outcome); }
+  .rationale .lbl { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 4px; opacity: 0.7; }
+
+  .switchpoint {
+    margin-top: 26px;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 22px 24px;
+  }
+  .switchpoint h3 {
+    font-size: 14px;
+    color: var(--luminate-primary);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .switchpoint .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  .formula {
+    background: var(--luminate-light);
+    border-radius: 10px;
+    padding: 14px 18px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    color: var(--luminate-dark);
+    line-height: 1.6;
+  }
+  .formula .lbl { font-size: 10.5px; letter-spacing: 0.08em; color: var(--luminate-primary); text-transform: uppercase; margin-bottom: 6px; font-family: 'Inter'; font-weight: 700; }
+
+  table.tx {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  table.tx th, table.tx td {
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--line-subtle);
+  }
+  table.tx th {
+    background: var(--luminate-light);
+    color: var(--luminate-primary);
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  table.tx td.name {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    color: var(--luminate-primary);
+  }
+</style>
+</head>
+<body>
+<div class="canvas">
+
+  <div class="title-block">
+    <div class="left">
+      <div class="figure-tag">Figure 09 — Regime Switching</div>
+      <h1>Cold-Start LLM Scoring vs Steady-State DoWhy</h1>
+      <p class="subtitle">When the SCM's empirical distribution is sparse, the planner falls back to an LLM prior — and surfaces the regime in the trace</p>
+    </div>
+    <div class="brand-pill">Causa · §D3</div>
+  </div>
+
+  <div class="split">
+
+    <div class="lane cold">
+      <div class="title">Cold-Start Regime</div>
+      <p class="sub">Insufficient history to back-door-adjust. The action scorer escalates to an LLM rather than emitting a noisy estimate.</p>
+      <span class="regime">history_size &lt; n_min · OR · identifiability ✗</span>
+
+      <div class="step">
+        <div class="n">1</div>
+        <div class="text">Scorer checks the history adapter — <code>history.n_observations</code> below threshold (default n_min = 8).</div>
+      </div>
+      <div class="step">
+        <div class="n">2</div>
+        <div class="text">Render the <code>[CAUSA::score_actions]</code> prompt with the candidate action list.</div>
+      </div>
+      <div class="step">
+        <div class="n">3</div>
+        <div class="text">Parse the JSON ranking into <code>ActionScore</code> objects.</div>
+      </div>
+      <div class="step">
+        <div class="n">4</div>
+        <div class="text">Stamp each score's <strong>rationale</strong> with <code>[cold-start LLM]</code> so the auditor can count it.</div>
+      </div>
+
+      <div class="rationale">
+        <div class="lbl">rationale (LLM_SCORER cold-start)</div>
+        [cold-start LLM] prior strength 0.62
+      </div>
+    </div>
+
+    <div class="lane steady">
+      <div class="title">Steady-State Regime</div>
+      <p class="sub">Enough rows to estimate E[Y | do(X=a), Z]. The DoWhy scorer takes over.</p>
+      <span class="regime">history_size ≥ n_min · AND · identifiable</span>
+
+      <div class="step">
+        <div class="n">1</div>
+        <div class="text">Identifier finds adjustment set Z via back-door criterion.</div>
+      </div>
+      <div class="step">
+        <div class="n">2</div>
+        <div class="text">For each candidate, estimator fits a linear regression of Y on X with Z controlled (or DML, etc.).</div>
+      </div>
+      <div class="step">
+        <div class="n">3</div>
+        <div class="text">Difference vs baseline gives the action's score.</div>
+      </div>
+      <div class="step">
+        <div class="n">4</div>
+        <div class="text">Rationale records the <strong>back-door set</strong> for provenance — auditable by the rubric reviewers.</div>
+      </div>
+
+      <div class="rationale">
+        <div class="lbl">rationale (CAUSAL steady-state)</div>
+        via back-door {context_available, codebase_structure, error_message_type}
+      </div>
+    </div>
+
+  </div>
+
+  <div class="switchpoint">
+    <h3>Switchpoint decision</h3>
+    <div class="grid">
+      <div>
+        <div class="formula">
+          <div class="lbl">Regime predicate</div>
+use_steady ← (history.n_observations ≥ n_min)
+            ∧ identify_effect(graph, X, Y).identifiable
+∧ adjustment_set ⊆ history.columns
+
+if use_steady:
+    return DoWhyActionScorer(...).score(...)
+else:
+    return LLMActionScorer(...).score(...)
+        </div>
+      </div>
+      <div>
+        <table class="tx">
+          <thead>
+            <tr><th>signal</th><th>interpretation</th><th>auditor field</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="name">[cold-start LLM]</td><td>insufficient data — LLM prior</td><td>cold_start_steps</td></tr>
+            <tr><td class="name">via back-door</td><td>do-calculus identification engaged</td><td>steady_state_steps</td></tr>
+            <tr><td class="name">synthetic row</td><td>CRM patched the history</td><td>reflection_triggers</td></tr>
+            <tr><td class="name">error</td><td>terminal failure recorded</td><td>errors[]</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--causal-mediator);"></div>cold-start</div>
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--causal-outcome);"></div>steady-state</div>
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--luminate-primary);"></div>switch logic</div>
+  </div>
+
+  <div class="footer-note">
+    Implementation: <strong>causa.planning.dowhy_scorer.DoWhyActionScorer</strong> + <strong>LLMActionScorer</strong> fallback · regime probed via <code>history</code> &amp; <code>identifiability</code>
+  </div>
+
+</div>
+</body>
+</html>

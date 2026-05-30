@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Causa — LLM Graph Extraction for Novel Domains</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_shared.css">
+<style>
+  .strip {
+    margin-top: 22px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 16px;
+    position: relative;
+  }
+  .phase {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 18px;
+    position: relative;
+    z-index: 1;
+  }
+  .phase.input    { border-top: 4px solid var(--causal-confounder); }
+  .phase.llm      { border-top: 4px solid var(--causal-mediator); }
+  .phase.filter   { border-top: 4px solid var(--causal-treatment); }
+  .phase.output   { border-top: 4px solid var(--causal-outcome); }
+
+  .phase .num {
+    display: inline-flex;
+    align-items: center; justify-content: center;
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    color: white;
+    background: var(--luminate-primary);
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    margin-right: 8px;
+    font-size: 12px;
+  }
+  .phase .name {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ink-strong);
+    margin-bottom: 4px;
+  }
+  .phase .sub { font-size: 11.5px; color: var(--ink-muted); margin-bottom: 12px; line-height: 1.45; }
+  .phase pre {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: var(--luminate-dark);
+    line-height: 1.5;
+    overflow-x: auto;
+    white-space: pre;
+  }
+
+  .arrow-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-top: 8px;
+    margin-bottom: 12px;
+  }
+  .arrow-row .ar {
+    text-align: center;
+    color: var(--luminate-primary);
+    font-size: 24px;
+  }
+
+  .case-study {
+    margin-top: 28px;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 22px 26px;
+  }
+  .case-study h3 {
+    font-size: 13px;
+    color: var(--luminate-primary);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .columns {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr 1fr;
+    gap: 22px;
+  }
+  .panel-mini {
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .panel-mini .ttl {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--ink-strong);
+    margin-bottom: 6px;
+  }
+  .edge-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    color: var(--ink);
+  }
+  .edge-list li {
+    padding: 4px 8px;
+    border-radius: 6px;
+    margin: 2px 0;
+  }
+  .edge-list li.kept     { background: #effaf3; color: var(--green); }
+  .edge-list li.dropped  { background: #fdecec; color: var(--red); text-decoration: line-through; }
+  .edge-list li.note     { background: #fff8e6; color: var(--causal-mediator); }
+</style>
+</head>
+<body>
+<div class="canvas">
+
+  <div class="title-block">
+    <div class="left">
+      <div class="figure-tag">Figure 12 — Component 1</div>
+      <h1>LLM Causal-Graph Extractor</h1>
+      <p class="subtitle">Cold-start path for <em>novel</em> domains — used in §N3 domain-transfer experiments</p>
+    </div>
+    <div class="brand-pill">Causa · §C1</div>
+  </div>
+
+  <div class="strip">
+
+    <div class="phase input">
+      <div><span class="num">1</span></div>
+      <div class="name">Input</div>
+      <p class="sub">A variable list + a free-form domain description (Markdown or prose).</p>
+<pre>variables = [
+  "incident_severity",
+  "team_response_time",
+  "mitigation_action",
+  "downtime_minutes",
+]
+description = """
+Site reliability postmortems.
+Severity drives both response speed
+and the chosen mitigation. The
+mitigation determines downtime …
+"""</pre>
+    </div>
+
+    <div class="phase llm">
+      <div><span class="num">2</span></div>
+      <div class="name">LLM proposal</div>
+      <p class="sub">Render the <code>[CAUSA::extract_edges]</code> prompt &amp; ask for a sparse DAG. JSON-only response, no prose.</p>
+<pre>{ "edges": [
+  {"source": "incident_severity",
+   "target": "team_response_time",
+   "semantics": "severe → faster"},
+  {"source": "incident_severity",
+   "target": "mitigation_action"},
+  {"source": "mitigation_action",
+   "target": "downtime_minutes"},
+  {"source": "downtime_minutes",
+   "target": "incident_severity",
+   "semantics": "feedback?"}
+]}</pre>
+    </div>
+
+    <div class="phase filter">
+      <div><span class="num">3</span></div>
+      <div class="name">Cycle &amp; identity filtering</div>
+      <p class="sub">Build a CausalGraph incrementally. Drop edges that introduce cycles, reference unknown variables, or form self-loops.</p>
+<pre>for edge in proposed:
+  if edge.target in unknown_vars:
+    rejected.append(edge); continue
+  try:
+    graph.add_edge(CausalEdge(...))
+  except GraphInvariantError:
+    rejected.append(edge)
+  else:
+    accepted.append(edge)</pre>
+    </div>
+
+    <div class="phase output">
+      <div><span class="num">4</span></div>
+      <div class="name">Output</div>
+      <p class="sub">A validated DAG + the accepted/rejected ledger. The ledger is what the LLM-extraction-quality §N3 eval grades.</p>
+<pre>graph, accepted, rejected = (
+  extractor.extract(
+    variables=variables,
+    domain_description=description,
+  )
+)
+
+# graph: validated CausalGraph
+# accepted: 3 edges
+# rejected: 1 (cycle)</pre>
+    </div>
+
+  </div>
+
+  <div class="case-study">
+    <h3>Sample run — site-reliability postmortem domain</h3>
+    <div class="columns">
+
+      <div class="panel-mini">
+        <div class="ttl">Proposed edges (4)</div>
+        <ul class="edge-list">
+          <li>incident_severity → team_response_time</li>
+          <li>incident_severity → mitigation_action</li>
+          <li>mitigation_action → downtime_minutes</li>
+          <li>downtime_minutes → incident_severity</li>
+        </ul>
+      </div>
+
+      <div class="panel-mini">
+        <div class="ttl">Accepted (3)</div>
+        <ul class="edge-list">
+          <li class="kept">✓ incident_severity → team_response_time</li>
+          <li class="kept">✓ incident_severity → mitigation_action</li>
+          <li class="kept">✓ mitigation_action → downtime_minutes</li>
+        </ul>
+      </div>
+
+      <div class="panel-mini">
+        <div class="ttl">Rejected (1)</div>
+        <ul class="edge-list">
+          <li class="dropped">✗ downtime_minutes → incident_severity</li>
+          <li class="note" style="text-decoration:none;">reason: GraphInvariantError — cycle</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--causal-confounder);"></div>input</div>
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--causal-mediator);"></div>LLM call</div>
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--causal-treatment);"></div>filter</div>
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--causal-outcome);"></div>output DAG</div>
+  </div>
+
+  <div class="footer-note">
+    Implementation: <strong>causa.extraction.LLMGraphExtractor</strong> · sparse by design · auditable accept/reject ledger
+  </div>
+
+</div>
+</body>
+</html>

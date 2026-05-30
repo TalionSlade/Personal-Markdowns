@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Causa — End-to-End Data Flow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_shared.css">
+<style>
+  .e2e {
+    position: relative;
+    height: 740px;
+    margin-top: 22px;
+    background:
+      radial-gradient(circle at 50% 38%, rgba(60,34,138,0.05) 0%, transparent 65%),
+      var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    overflow: hidden;
+  }
+  .node-box {
+    position: absolute;
+    background: white;
+    border: 2px solid var(--luminate-primary);
+    border-radius: 14px;
+    padding: 14px 18px;
+    box-shadow: 0 8px 22px -10px rgba(19, 1, 74, 0.22);
+    z-index: 2;
+    min-width: 200px;
+    text-align: center;
+  }
+  .node-box .name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--luminate-primary);
+    margin-bottom: 4px;
+  }
+  .node-box .desc {
+    font-size: 11.5px;
+    color: var(--ink-muted);
+    line-height: 1.45;
+  }
+
+  .node-box.src    { border-color: var(--causal-confounder); }
+  .node-box.src    .name { color: var(--causal-confounder); }
+  .node-box.agent  { border-color: var(--causal-treatment); background: #fff0f7; }
+  .node-box.agent  .name { color: var(--causal-treatment); }
+  .node-box.tool   { border-color: var(--causal-mediator); background: #fff8e6; }
+  .node-box.tool   .name { color: var(--causal-mediator); }
+  .node-box.store  { border-color: var(--ink-faint); background: var(--surface-2); }
+  .node-box.store  .name { color: var(--ink-strong); }
+  .node-box.report { border-color: var(--causal-outcome); background: #effaf3; }
+  .node-box.report .name { color: var(--causal-outcome); }
+
+  .p-tasks    { top: 50px;  left: 50px; }
+  .p-partition{ top: 50px;  left: 380px; }
+  .p-runner   { top: 50px;  left: 720px; }
+  .p-agent    { top: 240px; left: 720px; }
+  .p-tools    { top: 240px; left: 1050px; }
+  .p-history  { top: 440px; left: 380px; }
+  .p-scorer   { top: 440px; left: 720px; }
+  .p-reflect  { top: 440px; left: 1050px; }
+  .p-trace    { top: 620px; left: 50px; }
+  .p-audit    { top: 620px; left: 380px; }
+  .p-metrics  { top: 620px; left: 720px; }
+  .p-stats    { top: 620px; left: 1050px; }
+
+  .annotations {
+    margin-top: 24px;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 18px 22px;
+  }
+  .annotations h3 {
+    font-size: 13px;
+    color: var(--luminate-primary);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .ann-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+  }
+  .ann {
+    background: var(--surface-2);
+    border-left: 4px solid var(--luminate-primary);
+    padding: 10px 12px;
+    border-radius: 0 8px 8px 0;
+  }
+  .ann .h {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--luminate-primary);
+    margin-bottom: 4px;
+  }
+  .ann .b { font-size: 11.5px; color: var(--ink-muted); line-height: 1.5; }
+</style>
+</head>
+<body>
+<div class="canvas">
+
+  <div class="title-block">
+    <div class="left">
+      <div class="figure-tag">Figure 13 — End-to-End</div>
+      <h1>Tasks → Trace → Report</h1>
+      <p class="subtitle">The complete data path through Causa, from SWE-bench loader to dissertation table</p>
+    </div>
+    <div class="brand-pill">Causa · §I0</div>
+  </div>
+
+  <div class="e2e">
+
+    <svg class="flow-svg" viewBox="0 0 1572 740" preserveAspectRatio="none">
+      <defs>
+        <marker id="arrow" viewBox="0 0 12 12" refX="9" refY="6" markerWidth="9" markerHeight="9" orient="auto">
+          <path d="M0,0 L10,6 L0,12 Z" fill="#3c228a" opacity="0.7"/>
+        </marker>
+      </defs>
+
+      <!-- tasks → partition -->
+      <path d="M 270 100 Q 320 100 380 100" />
+      <!-- partition → runner -->
+      <path d="M 600 100 Q 660 100 720 100" />
+      <!-- runner → agent -->
+      <path d="M 830 145 Q 830 195 830 245" class="thick" />
+      <!-- agent → tools -->
+      <path d="M 940 285 Q 990 285 1050 285" />
+      <!-- agent → scorer / history -->
+      <path d="M 800 340 Q 800 400 800 445" />
+      <path d="M 720 290 Q 600 360 530 445" class="dashed" />
+      <!-- scorer → reflect -->
+      <path d="M 940 485 Q 990 485 1050 485" />
+      <!-- scorer → trace (step) -->
+      <path d="M 750 540 Q 500 600 240 625" class="thick pink" />
+      <!-- reflect → history (synthetic) -->
+      <path d="M 1050 510 Q 760 580 530 510" class="dashed amber" />
+      <!-- trace → audit -->
+      <path d="M 240 670 Q 320 670 380 670" />
+      <!-- audit → metrics -->
+      <path d="M 600 670 Q 660 670 720 670" />
+      <!-- metrics → stats -->
+      <path d="M 940 670 Q 990 670 1050 670" />
+
+      <text x="320" y="92">classify (4 axes)</text>
+      <text x="780" y="200">factory()</text>
+      <text x="1010" y="275">invoke</text>
+      <text x="950" y="475">CRM trigger</text>
+      <text x="430" y="600">JSON Lines append</text>
+      <text x="660" y="660">audit</text>
+      <text x="980" y="660">CI · perm</text>
+    </svg>
+
+    <div class="node-box src p-tasks"><div class="name">SWE-bench tasks</div><div class="desc">causa.evaluation.swebench</div></div>
+    <div class="node-box src p-partition"><div class="name">SplitPartitioner</div><div class="desc">IID · OOD · Unlabeled</div></div>
+    <div class="node-box p-runner"><div class="name">EvaluationRunner</div><div class="desc">serial or parallel</div></div>
+    <div class="node-box agent p-agent"><div class="name">BaseAgent.run(task)</div><div class="desc">one of 6 arms</div></div>
+    <div class="node-box tool p-tools"><div class="name">DebuggingTool registry</div><div class="desc">8 typed actions</div></div>
+    <div class="node-box store p-history"><div class="name">ObservationHistory</div><div class="desc">pandas, schema-typed</div></div>
+    <div class="node-box agent p-scorer"><div class="name">ActionScorer</div><div class="desc">DoWhy / LLM / hybrid</div></div>
+    <div class="node-box agent p-reflect"><div class="name">CounterfactualReflection</div><div class="desc">CRM (§E1)</div></div>
+    <div class="node-box store p-trace"><div class="name">trace.jsonl</div><div class="desc">append-only sink</div></div>
+    <div class="node-box p-audit"><div class="name">TraceAudit</div><div class="desc">post-hoc summary</div></div>
+    <div class="node-box report p-metrics"><div class="name">EvaluationMetrics</div><div class="desc">success · steps · CI</div></div>
+    <div class="node-box report p-stats"><div class="name">Stats &amp; report</div><div class="desc">BCa + perm test</div></div>
+
+  </div>
+
+  <div class="annotations">
+    <h3>Path annotations</h3>
+    <div class="ann-grid">
+      <div class="ann"><div class="h">load</div><div class="b">JSONL loader assigns 4 axis labels per task — language, framework, bug_type, codebase_size.</div></div>
+      <div class="ann"><div class="h">partition</div><div class="b">SplitPartitioner returns three buckets; runner aggregates metrics per bucket.</div></div>
+      <div class="ann"><div class="h">decide</div><div class="b">Per step: scorer reads history, ranks candidates, agent picks argmax.</div></div>
+      <div class="ann"><div class="h">act</div><div class="b">Tool invoked with frozen state snapshot; output records mediators &amp; outcome.</div></div>
+      <div class="ann"><div class="h">reflect</div><div class="b">CRM compares predicted vs observed outcome; if δ &gt; θ, append synthetic rows.</div></div>
+      <div class="ann"><div class="h">emit</div><div class="b">RunObserver hands each step + result to TraceWriter (or NullTraceWriter).</div></div>
+      <div class="ann"><div class="h">audit</div><div class="b">TraceAudit counts cold-start vs steady-state vs reflection-triggered steps.</div></div>
+      <div class="ann"><div class="h">report</div><div class="b">EvaluationMetrics + BCa CI + paired permutation test → dissertation table.</div></div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--causal-confounder);"></div>source</div>
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--causal-treatment);"></div>agent</div>
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--causal-mediator);"></div>tool / reflect</div>
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--causal-outcome);"></div>report</div>
+  </div>
+
+  <div class="footer-note">
+    Entry point: <strong>causa eval --arm causal --tasks data/swebench.jsonl --trace traces/causal.jsonl</strong>
+  </div>
+
+</div>
+</body>
+</html>

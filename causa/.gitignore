@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Virtual envs
+.venv/
+venv/
+env/
+
+# Test/cov
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data caches (large, regenerable)
+data/cache/
+data/swe-bench/
+*.parquet
+runs/
+traces/*.jsonl
+!traces/.gitkeep
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# MyPy / Ruff
+.mypy_cache/
+.ruff_cache/
+
+# Jupyter
+.ipynb_checkpoints/

@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Causa — Six Ablation Arms Compared</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_shared.css">
+<style>
+  .arm-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 22px;
+    margin-top: 22px;
+  }
+  .arm {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 22px 22px 16px;
+    position: relative;
+  }
+  .arm.causal      { border-top: 4px solid var(--causal-treatment); }
+  .arm.causal-nr   { border-top: 4px solid var(--luminate-primary); }
+  .arm.llm-scorer  { border-top: 4px solid var(--causal-confounder); }
+  .arm.react       { border-top: 4px solid var(--causal-mediator); }
+  .arm.cot         { border-top: 4px solid var(--pink); }
+  .arm.no-mem      { border-top: 4px solid var(--ink-faint); }
+
+  .arm-head {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 8px;
+  }
+  .arm-name {
+    font-size: 17px; font-weight: 700; color: var(--ink-strong);
+  }
+  .arm-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    padding: 3px 8px;
+    background: var(--surface-3);
+    border-radius: 5px;
+    color: var(--ink-muted);
+  }
+  .arm-claim {
+    font-size: 12.5px; color: var(--ink-muted);
+    margin-bottom: 14px;
+    line-height: 1.5;
+  }
+  .arm-block { margin-bottom: 12px; }
+  .arm-block .label {
+    font-size: 10.5px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--luminate-primary);
+    margin-bottom: 5px;
+  }
+  .arm-block .value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px; color: var(--ink);
+    line-height: 1.45;
+    background: var(--surface-2);
+    padding: 8px 10px;
+    border-radius: 6px;
+  }
+  .arm-block .value code { background: transparent; padding: 0; }
+
+  .arm-foot {
+    display: flex; gap: 6px; flex-wrap: wrap;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--line);
+  }
+
+  .summary {
+    margin-top: 26px;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 18px 22px;
+  }
+  table.compare {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  table.compare th, table.compare td {
+    padding: 8px 10px;
+    text-align: left;
+    border-bottom: 1px solid var(--line-subtle);
+  }
+  table.compare th {
+    background: var(--luminate-light);
+    color: var(--luminate-primary);
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  table.compare td.tick   { color: var(--green); font-weight: 700; }
+  table.compare td.cross  { color: var(--red);   font-weight: 700; }
+  table.compare td.partial{ color: var(--amber); font-weight: 700; }
+  table.compare td.name { font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--luminate-primary); }
+</style>
+</head>
+<body>
+<div class="canvas">
+
+  <div class="title-block">
+    <div class="left">
+      <div class="figure-tag">Figure 05 — Ablations</div>
+      <h1>Six Ablation Arms — Ceteris-Paribus Comparison</h1>
+      <p class="subtitle">All arms share <code>BaseAgent</code>; only <code>_choose_action</code>/<code>_after_step</code>/<code>_next_state</code> hooks vary</p>
+    </div>
+    <div class="brand-pill">Causa · §J3</div>
+  </div>
+
+  <div class="arm-grid">
+
+    <div class="arm causal">
+      <div class="arm-head"><div class="arm-name">Causal Planning</div><div class="arm-tag">CAUSAL</div></div>
+      <p class="arm-claim">Pearl-style do-calculus action scoring plus counterfactual reflection. The dissertation's main claim.</p>
+      <div class="arm-block"><div class="label">Scorer</div><div class="value">DoWhyActionScorer</div></div>
+      <div class="arm-block"><div class="label">Reflection</div><div class="value">CounterfactualReflection — adaptive median threshold</div></div>
+      <div class="arm-block"><div class="label">Memory</div><div class="value">PandasObservationHistory (full)</div></div>
+      <div class="arm-foot">
+        <span class="chip purple">causal</span>
+        <span class="chip green">reflection</span>
+        <span class="chip blue">memory</span>
+      </div>
+    </div>
+
+    <div class="arm causal-nr">
+      <div class="arm-head"><div class="arm-name">Causal (no reflection)</div><div class="arm-tag">CAUSAL_NO_REFLECTION</div></div>
+      <p class="arm-claim">Isolates the contribution of the Counterfactual Reflection Module — same scorer, no synthetic data injection.</p>
+      <div class="arm-block"><div class="label">Scorer</div><div class="value">DoWhyActionScorer</div></div>
+      <div class="arm-block"><div class="label">Reflection</div><div class="value">None</div></div>
+      <div class="arm-block"><div class="label">Memory</div><div class="value">PandasObservationHistory (observed only)</div></div>
+      <div class="arm-foot">
+        <span class="chip purple">causal</span>
+        <span class="chip gray">no reflection</span>
+        <span class="chip blue">memory</span>
+      </div>
+    </div>
+
+    <div class="arm llm-scorer">
+      <div class="arm-head"><div class="arm-name">LLM Scorer</div><div class="arm-tag">LLM_SCORER</div></div>
+      <p class="arm-claim">Drops do-calculus identification — pure LLM scoring through the same scorer port. Tests if the structural causal model adds value beyond prompting.</p>
+      <div class="arm-block"><div class="label">Scorer</div><div class="value">LLMActionScorer</div></div>
+      <div class="arm-block"><div class="label">Reflection</div><div class="value">None</div></div>
+      <div class="arm-block"><div class="label">Memory</div><div class="value">PandasObservationHistory</div></div>
+      <div class="arm-foot">
+        <span class="chip gray">no causal</span>
+        <span class="chip gray">no reflection</span>
+        <span class="chip blue">memory</span>
+      </div>
+    </div>
+
+    <div class="arm react">
+      <div class="arm-head"><div class="arm-name">ReAct</div><div class="arm-tag">REACT</div></div>
+      <p class="arm-claim">Yao et al. 2023 — interleaved thought-action-observation scratchpad. Strong LLM-only baseline.</p>
+      <div class="arm-block"><div class="label">Scorer</div><div class="value">ReActScorer (LLM-driven, marker <code>[CAUSA::react_step]</code>)</div></div>
+      <div class="arm-block"><div class="label">Reflection</div><div class="value">Scratchpad (thought history)</div></div>
+      <div class="arm-block"><div class="label">Memory</div><div class="value">In-prompt scratchpad only</div></div>
+      <div class="arm-foot">
+        <span class="chip gray">no causal</span>
+        <span class="chip amber">scratchpad</span>
+        <span class="chip gray">no SCM history</span>
+      </div>
+    </div>
+
+    <div class="arm cot">
+      <div class="arm-head"><div class="arm-name">Chain-of-Thought</div><div class="arm-tag">COT</div></div>
+      <p class="arm-claim">Wei et al. 2022 — one-shot CoT per decision. Tests if reasoning style alone closes the gap on causal planning.</p>
+      <div class="arm-block"><div class="label">Scorer</div><div class="value">CoTScorer with <code>```final</code> JSON parser</div></div>
+      <div class="arm-block"><div class="label">Reflection</div><div class="value">In-step chain only (no carry-over)</div></div>
+      <div class="arm-block"><div class="label">Memory</div><div class="value">No persistent history</div></div>
+      <div class="arm-foot">
+        <span class="chip gray">no causal</span>
+        <span class="chip pink">chain-of-thought</span>
+        <span class="chip gray">no memory</span>
+      </div>
+    </div>
+
+    <div class="arm no-mem">
+      <div class="arm-head"><div class="arm-name">No-Memory Floor</div><div class="arm-tag">NO_MEMORY</div></div>
+      <p class="arm-claim">Stripped-down baseline — wipes mediators between steps. The true ablation floor; anything that beats this must beat the LLM alone.</p>
+      <div class="arm-block"><div class="label">Scorer</div><div class="value">LLM single-shot</div></div>
+      <div class="arm-block"><div class="label">Reflection</div><div class="value">None</div></div>
+      <div class="arm-block"><div class="label">Memory</div><div class="value"><code>_next_state</code> keeps only {error_message_type, codebase_structure, context_available}</div></div>
+      <div class="arm-foot">
+        <span class="chip gray">no causal</span>
+        <span class="chip gray">no reflection</span>
+        <span class="chip red">no memory</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="summary">
+    <h3 style="font-size: 13px; color: var(--luminate-primary); margin-bottom: 12px; letter-spacing: 0.08em; text-transform: uppercase;">Capability matrix</h3>
+    <table class="compare">
+      <thead>
+        <tr>
+          <th>Arm</th>
+          <th>Pearl identification</th>
+          <th>Counterfactual reflection</th>
+          <th>Persistent SCM history</th>
+          <th>LLM access</th>
+          <th>Step budget aware</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="name">CAUSAL</td>                 <td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓ (cold-start)</td><td class="tick">✓</td></tr>
+        <tr><td class="name">CAUSAL_NO_REFLECTION</td>  <td class="tick">✓</td><td class="cross">✗</td><td class="tick">✓</td><td class="tick">✓ (cold-start)</td><td class="tick">✓</td></tr>
+        <tr><td class="name">LLM_SCORER</td>            <td class="cross">✗</td><td class="cross">✗</td><td class="tick">✓</td><td class="tick">✓</td><td class="tick">✓</td></tr>
+        <tr><td class="name">REACT</td>                  <td class="cross">✗</td><td class="cross">✗</td><td class="partial">scratchpad</td><td class="tick">✓</td><td class="tick">✓</td></tr>
+        <tr><td class="name">COT</td>                    <td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="tick">✓</td><td class="tick">✓</td></tr>
+        <tr><td class="name">NO_MEMORY</td>              <td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="tick">✓</td><td class="tick">✓</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--green);"></div>capability present</div>
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--amber);"></div>partial</div>
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--red);"></div>missing</div>
+  </div>
+
+  <div class="footer-note">
+    Build: <strong>causa.cli.runtime.AgentArm</strong> · <code>build_agent(arm, llm, scorer, …)</code> — six arms, one factory
+  </div>
+
+</div>
+</body>
+</html>

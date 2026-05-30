@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Causa — Causal Planning Agent Decision Loop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_shared.css">
+<style>
+  .loop-stage {
+    margin-top: 22px;
+    position: relative;
+    height: 700px;
+    background:
+      radial-gradient(circle at 50% 38%, rgba(60, 34, 138, 0.04) 0%, transparent 65%),
+      var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    overflow: hidden;
+  }
+
+  .box {
+    position: absolute;
+    background: white;
+    border: 2px solid var(--luminate-primary);
+    border-radius: 14px;
+    padding: 14px 18px;
+    box-shadow: 0 8px 24px -10px rgba(19, 1, 74, 0.22);
+    z-index: 2;
+    text-align: center;
+    min-width: 180px;
+  }
+  .box .num {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--luminate-primary);
+    color: white;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 6px;
+  }
+  .box .name {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--luminate-primary);
+  }
+  .box .desc {
+    margin-top: 4px;
+    font-size: 11px;
+    color: var(--ink-muted);
+    line-height: 1.4;
+  }
+  .box.ext  { border-color: var(--causal-mediator); background: #fff8e6; }
+  .box.ext .name { color: var(--causal-mediator); }
+  .box.ext .num  { background: var(--causal-mediator); }
+  .box.terminal { border-color: var(--causal-outcome); background: #effaf3; }
+  .box.terminal .name { color: var(--causal-outcome); }
+  .box.terminal .num  { background: var(--causal-outcome); }
+  .box.refl { border-color: var(--causal-treatment); background: #fff0f7; min-width: 240px; }
+  .box.refl .name { color: var(--causal-treatment); }
+  .box.refl .num  { background: var(--causal-treatment); }
+
+  .b-task        { top: 28px; left: 40px; }
+  .b-state       { top: 28px; left: 320px; }
+  .b-scorer      { top: 28px; left: 600px; }
+  .b-history     { top: 220px; left: 320px; }
+  .b-choose      { top: 220px; left: 600px; }
+  .b-tool        { top: 220px; left: 880px; }
+  .b-observation { top: 420px; left: 600px; }
+  .b-refl        { top: 420px; left: 880px; }
+  .b-budget      { top: 620px; left: 320px; }
+  .b-solved      { top: 620px; left: 880px; }
+
+  .pseudo {
+    margin-top: 24px;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 20px 24px;
+  }
+  .pseudo h3 {
+    font-size: 14px;
+    color: var(--luminate-primary);
+    margin-bottom: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .pseudo pre {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 14px 16px;
+    line-height: 1.55;
+    color: var(--luminate-dark);
+    overflow-x: auto;
+  }
+  .pseudo pre .kw { color: var(--luminate-primary); font-weight: 700; }
+  .pseudo pre .cm { color: var(--ink-muted); font-style: italic; }
+</style>
+</head>
+<body>
+<div class="canvas">
+
+  <div class="title-block">
+    <div class="left">
+      <div class="figure-tag">Figure 04 — Control Flow</div>
+      <h1>CausalPlanningAgent: Decision Loop</h1>
+      <p class="subtitle">One iteration of <code>BaseAgent.run</code> as specialised by the causal arm</p>
+    </div>
+    <div class="brand-pill">Causa · §D2</div>
+  </div>
+
+  <div class="loop-stage">
+
+    <svg class="flow-svg" viewBox="0 0 1572 700" preserveAspectRatio="none">
+      <defs>
+        <marker id="arrow" viewBox="0 0 12 12" refX="9" refY="6" markerWidth="9" markerHeight="9" orient="auto">
+          <path d="M0,0 L10,6 L0,12 Z" fill="#3c228a" opacity="0.7"/>
+        </marker>
+      </defs>
+
+      <!-- task → state -->
+      <path d="M 220 80 Q 280 80 320 80" />
+      <!-- state → scorer.candidates -->
+      <path d="M 500 80 Q 560 80 600 80" />
+      <!-- scorer → choose -->
+      <path d="M 700 130 Q 700 180 700 230" class="thick" />
+      <!-- history → scorer (read) -->
+      <path d="M 420 235 Q 580 200 700 130" class="dashed" />
+      <!-- choose → tool -->
+      <path d="M 800 270 Q 850 270 880 270" />
+      <!-- tool → observation (record) -->
+      <path d="M 970 320 Q 850 380 740 425" class="thick" />
+      <!-- observation → reflection -->
+      <path d="M 800 450 Q 850 450 880 450" />
+      <!-- observation → history (append) -->
+      <path d="M 600 475 Q 510 380 420 290" class="dashed amber" />
+      <!-- reflection → history (synthetic rows) -->
+      <path d="M 880 480 Q 600 540 420 295" class="dashed pink" />
+      <!-- outcome ≥ threshold → solved -->
+      <path d="M 800 480 Q 880 560 880 620" class="green" />
+      <!-- outcome < threshold & budget exhausted → budget exceeded -->
+      <path d="M 600 480 Q 460 580 420 620" class="red" />
+      <!-- loop back: state ← observation when continuing -->
+      <path d="M 600 460 Q 380 350 380 130" class="dashed" />
+
+      <text x="540" y="350">append</text>
+      <text x="620" y="555">synthetic rows</text>
+      <text x="840" y="565">SOLVED</text>
+      <text x="430" y="555">BUDGET_EXCEEDED</text>
+    </svg>
+
+    <div class="box b-task"><div class="num">0</div><div class="name">DebuggingTask</div><div class="desc">initial_state + axes</div></div>
+    <div class="box b-state"><div class="num">1</div><div class="name">DecisionContext</div><div class="desc">frozen state snapshot</div></div>
+    <div class="box ext b-scorer"><div class="num">2</div><div class="name">DoWhyActionScorer</div><div class="desc">identify · estimate · rank</div></div>
+    <div class="box b-history"><div class="num">3</div><div class="name">ObservationHistory</div><div class="desc">pandas-backed, schema-typed</div></div>
+    <div class="box b-choose"><div class="num">4</div><div class="name">AgentChoice</div><div class="desc">argmax + full ranking</div></div>
+    <div class="box ext b-tool"><div class="num">5</div><div class="name">DebuggingTool</div><div class="desc">one of 8 registered actions</div></div>
+    <div class="box b-observation"><div class="num">6</div><div class="name">AgentStep observation</div><div class="desc">mediators + outcome</div></div>
+    <div class="box refl b-refl"><div class="num">7</div><div class="name">CounterfactualReflectionModule</div><div class="desc">trigger ⇒ synthetic rows</div></div>
+    <div class="box terminal b-budget"><div class="num">★</div><div class="name">BUDGET_EXCEEDED</div><div class="desc">no step met threshold</div></div>
+    <div class="box terminal b-solved"><div class="num">★</div><div class="name">SOLVED</div><div class="desc">outcome ≥ θ</div></div>
+
+  </div>
+
+  <div class="pseudo">
+    <h3>Loop body (CausalPlanningAgent)</h3>
+<pre><span class="kw">for</span> step_index <span class="kw">in</span> range(self._step_budget):
+    ctx        = self._snapshot_context(step_index=step_index, state=state)         <span class="cm"># 1</span>
+    choice     = self._choose_action(candidates, context=ctx, task=task)             <span class="cm"># 2: DoWhyActionScorer</span>
+    tool       = self._tools[choice.action.name]                                     <span class="cm"># 5</span>
+    output     = tool(ToolInput(args={}), state=state)
+    obs, outcome = self._record_observation(state=state, choice=choice,             <span class="cm"># 6</span>
+                                            tool_output=output)
+    self._after_step(step=step, task=task, state=state)                              <span class="cm"># 3+7: history append, reflect</span>
+    trace.append(step)
+    <span class="kw">if</span> outcome &gt;= self._success_threshold: <span class="kw">break</span>                            <span class="cm"># SOLVED</span>
+    state = self._next_state(prev_state=state, observation=obs)                      <span class="cm"># carry mediators forward</span></pre>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--luminate-primary);"></div>Agent state</div>
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--causal-mediator);"></div>External adapter</div>
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--causal-treatment);"></div>Reflection</div>
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--causal-outcome);"></div>Terminal</div>
+  </div>
+
+  <div class="footer-note">
+    Implementation: <strong>causa.agents.causal.CausalPlanningAgent</strong> · subclass of <code>BaseAgent</code> · overrides <code>_choose_action</code>, <code>_after_step</code>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Causa — Counterfactual Reflection Module</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_shared.css">
+<style>
+  .crm {
+    display: grid;
+    grid-template-columns: 1.05fr 1.1fr;
+    gap: 26px;
+    margin-top: 22px;
+  }
+  .panel {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 22px 24px;
+  }
+  .panel h3 {
+    font-size: 14px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--luminate-primary);
+    margin-bottom: 14px;
+  }
+
+  .flow {
+    position: relative;
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .stage-row {
+    display: flex; gap: 12px; align-items: center;
+  }
+  .stage-num {
+    width: 28px; height: 28px;
+    background: var(--luminate-primary);
+    color: white;
+    border-radius: 50%;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 13px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .stage-card {
+    flex: 1;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 10px 14px;
+  }
+  .stage-card .name { font-weight: 700; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: var(--luminate-primary); }
+  .stage-card .why  { font-size: 11.5px; color: var(--ink-muted); margin-top: 4px; line-height: 1.45; }
+
+  .branch {
+    margin-top: 6px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .branch .b {
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .branch .b.go {
+    background: #effaf3;
+    border-left: 4px solid var(--green);
+    color: var(--ink);
+  }
+  .branch .b.skip {
+    background: #fdecec;
+    border-left: 4px solid var(--red);
+    color: var(--ink);
+  }
+  .branch .b .label { font-weight: 700; font-family: 'JetBrains Mono', monospace; font-size: 11px; margin-bottom: 4px; }
+
+  .formula-block {
+    margin-top: 10px;
+    background: var(--luminate-light);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--luminate-dark);
+    line-height: 1.55;
+  }
+  .formula-block .lbl { font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em; color: var(--luminate-primary); text-transform: uppercase; }
+
+  .timeline {
+    position: relative;
+    margin-top: 14px;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px 18px;
+  }
+  .timeline-row { display: grid; grid-template-columns: 50px 1fr; gap: 12px; align-items: start; padding: 6px 0; border-bottom: 1px dashed var(--line); }
+  .timeline-row:last-child { border-bottom: none; }
+  .timeline-step { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-muted); }
+  .timeline-event { font-size: 12px; color: var(--ink); }
+  .timeline-event code { background: white; padding: 1px 5px; border-radius: 4px; border: 1px solid var(--line); }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    margin-left: 6px;
+  }
+  .badge.fire { background: #fdecec; color: var(--red); }
+  .badge.quiet { background: #effaf3; color: var(--green); }
+</style>
+</head>
+<body>
+<div class="canvas">
+
+  <div class="title-block">
+    <div class="left">
+      <div class="figure-tag">Figure 06 — Component 4</div>
+      <h1>Counterfactual Reflection Module</h1>
+      <p class="subtitle">Adaptive threshold &amp; synthetic-row injection that keeps the SCM honest under shift</p>
+    </div>
+    <div class="brand-pill">Causa · §E1</div>
+  </div>
+
+  <div class="crm">
+
+    <div class="panel">
+      <h3>Trigger algorithm</h3>
+      <div class="flow">
+
+        <div class="stage-row">
+          <div class="stage-num">1</div>
+          <div class="stage-card">
+            <div class="name">Compute expected outcome y_hat under do(X = chosen_action)</div>
+            <div class="why">Plug-in from the back-door estimator using the current observation history.</div>
+          </div>
+        </div>
+
+        <div class="stage-row">
+          <div class="stage-num">2</div>
+          <div class="stage-card">
+            <div class="name">Compute observed outcome y_obs from the tool output</div>
+            <div class="why">Recorded in the step's observation row before reflection runs.</div>
+          </div>
+        </div>
+
+        <div class="stage-row">
+          <div class="stage-num">3</div>
+          <div class="stage-card">
+            <div class="name">Compute discrepancy δ = |y_hat − y_obs|</div>
+            <div class="why">The size of the surprise — how badly the SCM mis-predicted this step.</div>
+          </div>
+        </div>
+
+        <div class="stage-row">
+          <div class="stage-num">4</div>
+          <div class="stage-card">
+            <div class="name">Compare δ to threshold θ</div>
+            <div class="why">Default <code>AdaptiveMedianThreshold</code>: θ = median(|δ_history|) + ε.</div>
+          </div>
+        </div>
+
+        <div class="branch">
+          <div class="b go">
+            <div class="label">δ &gt; θ — TRIGGER</div>
+            Call LLM with <code>[CAUSA::counterfactual]</code> prompt. Parse alternative-action estimates. Append synthetic SCM-shaped rows to the history under <code>reflection.update.triggered = True</code>.
+            <span class="badge fire">FIRE</span>
+          </div>
+          <div class="b skip">
+            <div class="label">δ ≤ θ — SKIP</div>
+            Record reflection="no update" in the trace step. The SCM was within tolerance — no synthetic injection.
+            <span class="badge quiet">QUIET</span>
+          </div>
+        </div>
+
+        <div class="formula-block">
+          <div class="lbl">Threshold</div>
+          θ ← median(|δ_1|, …, |δ_n|) + ε     <span style="color: var(--ink-muted);">ε = 1e-3</span>
+        </div>
+        <div class="formula-block">
+          <div class="lbl">Synthetic row format</div>
+          row = { …state, X = a, Y = y_hat<sub>a</sub>, _synthetic = True }
+        </div>
+
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Worked timeline (4-step task)</h3>
+
+      <div class="timeline">
+        <div class="timeline-row">
+          <div class="timeline-step">step 0</div>
+          <div class="timeline-event">action=<code>code_search</code> · y_hat=0.40 · y_obs=0.30 · δ=0.10 · θ=∞ (no history) · <span class="badge quiet">QUIET</span></div>
+        </div>
+        <div class="timeline-row">
+          <div class="timeline-step">step 1</div>
+          <div class="timeline-event">action=<code>read_file</code> · y_hat=0.55 · y_obs=0.20 · δ=0.35 · θ=0.10 · <span class="badge fire">FIRE</span> → 3 synthetic rows for unseen actions</div>
+        </div>
+        <div class="timeline-row">
+          <div class="timeline-step">step 2</div>
+          <div class="timeline-event">action=<code>run_tests</code> · y_hat=0.65 · y_obs=0.62 · δ=0.03 · θ=0.18 · <span class="badge quiet">QUIET</span></div>
+        </div>
+        <div class="timeline-row">
+          <div class="timeline-step">step 3</div>
+          <div class="timeline-event">action=<code>apply_patch</code> · y_hat=0.90 · y_obs=1.00 · δ=0.10 · θ=0.13 · <span class="badge quiet">QUIET</span> · <strong style="color: var(--green);">SOLVED</strong></div>
+        </div>
+      </div>
+
+      <h3 style="margin-top: 22px;">Why this matters under shift</h3>
+      <div class="formula-block">
+        <div class="lbl">Robustness argument</div>
+        Under distribution shift, the empirically-estimated effect P̂(Y|X,Z) drifts away from the test distribution P(Y|X,Z).
+        The CRM detects the drift through δ, then patches the history with counterfactual estimates from the LLM —
+        a hybrid that anchors decisions to causal structure while admitting that the data may be stale.
+      </div>
+
+      <h3 style="margin-top: 22px;">Trace anchor for the auditor</h3>
+      <div class="formula-block">
+        <div class="lbl">Surface in trace</div>
+        step.reflection = "appended synthetic row(s) for {…}"<br>
+        ↓<br>
+        TraceAudit.reflection_triggers += 1
+      </div>
+    </div>
+
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--green);"></div>quiet (δ ≤ θ)</div>
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--red);"></div>fire (δ &gt; θ)</div>
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--luminate-primary);"></div>algorithm</div>
+  </div>
+
+  <div class="footer-note">
+    Implementation: <strong>causa.reflection.CounterfactualReflectionModule</strong> · threshold adapter at <code>causa.adapters.threshold</code>
+  </div>
+
+</div>
+</body>
+</html>

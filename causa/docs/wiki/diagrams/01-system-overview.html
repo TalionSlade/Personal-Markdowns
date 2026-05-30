@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Causa — System Overview (Hexagonal Architecture)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_shared.css">
+<style>
+  .layer-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 28px;
+    margin-top: 24px;
+    position: relative;
+    z-index: 1;
+  }
+  .layer {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 24px 22px;
+    box-shadow: 0 2px 4px rgba(19, 1, 74, 0.04), 0 16px 40px -16px rgba(19, 1, 74, 0.12);
+    position: relative;
+  }
+  .layer-header { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
+  .layer-icon {
+    width: 42px; height: 42px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    background: linear-gradient(135deg, var(--luminate-primary), var(--luminate-medium));
+    color: white;
+    font-weight: 700;
+  }
+  .layer-title { font-size: 18px; font-weight: 700; color: var(--ink-strong); }
+  .layer-path {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-muted);
+    margin-bottom: 12px;
+    padding: 4px 8px;
+    background: var(--luminate-light);
+    border-radius: 6px;
+    display: inline-block;
+  }
+  .layer-desc { font-size: 12.5px; line-height: 1.55; color: var(--ink); margin-bottom: 12px; }
+  .module-list { display: flex; flex-direction: column; gap: 8px; }
+  .module {
+    display: flex; gap: 8px; align-items: flex-start;
+    font-size: 12px; color: var(--ink);
+    line-height: 1.5;
+    padding: 6px 8px;
+    border-left: 3px solid var(--luminate-lighter);
+    background: var(--surface-2);
+    border-radius: 0 6px 6px 0;
+  }
+  .module strong { color: var(--ink-strong); font-weight: 600; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; }
+
+  .ring {
+    position: relative;
+    margin-top: 36px;
+    padding: 28px 36px 40px;
+    border-radius: 22px;
+    background: linear-gradient(180deg, white 0%, var(--surface-2) 100%);
+    border: 1px solid var(--line);
+  }
+  .ring-title {
+    font-size: 14px; font-weight: 700;
+    color: var(--luminate-primary);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .ring-row {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 14px;
+  }
+  .ring-cell {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+  .ring-cell .name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--luminate-primary);
+    margin-bottom: 4px;
+  }
+  .ring-cell .desc { font-size: 11.5px; color: var(--ink-muted); line-height: 1.4; }
+</style>
+</head>
+<body>
+<div class="canvas">
+
+  <div class="title-block">
+    <div class="left">
+      <div class="figure-tag">Figure 01 — Architecture</div>
+      <h1>Causa: Hexagonal System Overview</h1>
+      <p class="subtitle">Pearl-style causal planning for LLM debugging agents — Ports &amp; Adapters layering</p>
+    </div>
+    <div class="brand-pill">Causa · Dissertation</div>
+  </div>
+
+  <div class="layer-grid">
+
+    <div class="layer">
+      <div class="layer-header">
+        <div class="layer-icon">⬢</div>
+        <div class="layer-title">Core Domain</div>
+      </div>
+      <div class="layer-path">src/causa/core/</div>
+      <p class="layer-desc">
+        Pure, dependency-free representation of Pearl's structural-causal-model
+        algebra. Knows nothing about LLMs, files, or DoWhy — every adapter
+        depends on the core, never the reverse.
+      </p>
+      <div class="module-list">
+        <div class="module"><span><strong>graph.py</strong> — Acyclic DAG with invariant checks (no self-loops, no cycles)</span></div>
+        <div class="module"><span><strong>scm.py</strong> — <code>SCM</code> + <code>SCMBuilder</code>: variables × equations × graph</span></div>
+        <div class="module"><span><strong>identifiability.py</strong> — Back-door criterion identification (minimal sets)</span></div>
+        <div class="module"><span><strong>intervention.py</strong> — Graph mutilation under <code>do(X = x)</code></span></div>
+        <div class="module"><span><strong>variables.py</strong> — Typed domains: BINARY, CATEGORICAL, CONTINUOUS</span></div>
+      </div>
+    </div>
+
+    <div class="layer">
+      <div class="layer-header">
+        <div class="layer-icon">⊕</div>
+        <div class="layer-title">Application Layer</div>
+      </div>
+      <div class="layer-path">src/causa/{agents,planning,reflection,extraction,evaluation,telemetry}/</div>
+      <p class="layer-desc">
+        Use-case orchestration. Agents drive the decision loop; planning &amp;
+        reflection wire causal mechanics into action selection; evaluation
+        runs the distribution-shift protocol; telemetry persists auditable
+        traces.
+      </p>
+      <div class="module-list">
+        <div class="module"><span><strong>agents/</strong> — <code>CausalPlanningAgent</code>, <code>ReActAgent</code>, <code>CoTAgent</code>, <code>NoMemoryAgent</code></span></div>
+        <div class="module"><span><strong>planning/</strong> — <code>DoWhyActionScorer</code>, <code>LLMActionScorer</code> cold-start fallback</span></div>
+        <div class="module"><span><strong>reflection/</strong> — Counterfactual reflection module &amp; thresholds</span></div>
+        <div class="module"><span><strong>extraction/</strong> — <code>LLMGraphExtractor</code> for novel-domain DAGs</span></div>
+        <div class="module"><span><strong>evaluation/</strong> — <code>EvaluationRunner</code>, partitioner, BCa &amp; permutation stats</span></div>
+        <div class="module"><span><strong>telemetry/</strong> — JSON Lines trace writer + post-hoc <code>TraceAudit</code></span></div>
+      </div>
+    </div>
+
+    <div class="layer">
+      <div class="layer-header">
+        <div class="layer-icon">⇆</div>
+        <div class="layer-title">Ports &amp; Adapters</div>
+      </div>
+      <div class="layer-path">src/causa/{ports,adapters}/</div>
+      <p class="layer-desc">
+        Ports declare narrow contracts (Protocols); adapters supply concrete
+        implementations. Every dissertation ablation is a single-line adapter
+        swap in <code>causa.cli.runtime.build_agent</code> — no plumbing rewrites.
+      </p>
+      <div class="module-list">
+        <div class="module"><span><strong>ports/llm.py</strong> ⇆ adapters: Anthropic, MockLLM</span></div>
+        <div class="module"><span><strong>ports/scorer.py</strong> ⇆ adapters: DoWhy, LLM-only, hybrid</span></div>
+        <div class="module"><span><strong>ports/estimator.py</strong> ⇆ adapters: linear regression, DML</span></div>
+        <div class="module"><span><strong>ports/history.py</strong> ⇆ adapters: pandas, in-memory</span></div>
+        <div class="module"><span><strong>ports/tool.py</strong> ⇆ adapters: stubbed debugging tools (8 actions)</span></div>
+        <div class="module"><span><strong>ports/threshold.py</strong> ⇆ adapters: static, adaptive-median</span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="ring">
+    <div class="ring-title">Driving / Driven Boundaries (CLI ↔ Domain ↔ External Services)</div>
+    <div class="ring-row">
+      <div class="ring-cell">
+        <div class="name">cli/main.py</div>
+        <div class="desc">Typer commands: <code>run</code>, <code>eval</code>, <code>scm-show</code>, <code>scm-extract</code>, <code>trace-audit</code></div>
+      </div>
+      <div class="ring-cell">
+        <div class="name">cli/runtime.py</div>
+        <div class="desc">Wires the chosen <code>AgentArm</code> with adapters; the <em>only</em> place ablations are configured</div>
+      </div>
+      <div class="ring-cell">
+        <div class="name">SWE-bench loader</div>
+        <div class="desc"><code>causa.evaluation.swebench</code> classifies tasks along 4 distribution-shift axes</div>
+      </div>
+      <div class="ring-cell">
+        <div class="name">Anthropic API</div>
+        <div class="desc">Adapter behind <code>LLMClient</code>; everything else runs against <code>MockLLMClient</code></div>
+      </div>
+      <div class="ring-cell">
+        <div class="name">DoWhy / NetworkX</div>
+        <div class="desc">External libraries reached only through <code>ActionScorer</code> &amp; <code>EffectEstimator</code> adapters</div>
+      </div>
+      <div class="ring-cell">
+        <div class="name">JSON Lines trace</div>
+        <div class="desc">Append-only, fsync-optional sink; consumed by <code>TraceAudit</code> for §G2 audits</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--luminate-primary);"></div>Core (no I/O)</div>
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--luminate-medium);"></div>Application</div>
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--luminate-light); border: 1px solid var(--luminate-primary);"></div>Adapter</div>
+  </div>
+
+  <div class="footer-note">
+    Author <strong>Arpan Ghosh</strong> · BITS Pilani · M.Tech Dissertation · May 2026 — <em>Causal Planning for LLM Agents</em>
+  </div>
+
+</div>
+</body>
+</html>

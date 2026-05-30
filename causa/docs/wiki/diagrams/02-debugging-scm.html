@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Causa — The 9-Node Debugging Structural Causal Model</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_shared.css">
+<style>
+  .scm-stage {
+    position: relative;
+    height: 720px;
+    margin-top: 20px;
+    background:
+      radial-gradient(circle at 50% 50%, rgba(60, 34, 138, 0.06) 0%, transparent 60%),
+      var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    overflow: hidden;
+  }
+
+  /* Pin the 9 SCM nodes by absolute coordinates */
+  .n {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    min-width: 180px;
+    padding: 14px 18px;
+    border-radius: 14px;
+    background: white;
+    border: 2px solid var(--luminate-primary);
+    font-family: 'Inter', sans-serif;
+    box-shadow: 0 10px 24px -10px rgba(19, 1, 74, 0.25);
+    z-index: 2;
+    text-align: center;
+  }
+  .n .vname {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--luminate-primary);
+  }
+  .n .role-tag {
+    display: inline-block;
+    margin-top: 6px;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 999px;
+  }
+  .n .desc {
+    margin-top: 6px;
+    font-size: 11px;
+    color: var(--ink-muted);
+    line-height: 1.45;
+  }
+
+  /* role styling */
+  .n.observational  { border-color: var(--causal-confounder); }
+  .n.observational  .vname { color: var(--causal-confounder); }
+  .n.observational  .role-tag { background: #e8f1fd; color: var(--causal-confounder); }
+
+  .n.mediator       { border-color: var(--causal-mediator); background: #fff8e6; }
+  .n.mediator       .vname { color: var(--causal-mediator); }
+  .n.mediator       .role-tag { background: #fff5dd; color: var(--causal-mediator); }
+
+  .n.action         { border-color: var(--causal-treatment); background: #fff0f7; }
+  .n.action         .vname { color: var(--causal-treatment); }
+  .n.action         .role-tag { background: #fdeaf3; color: var(--causal-treatment); }
+
+  .n.outcome        { border-color: var(--causal-outcome); background: #effaf3; }
+  .n.outcome        .vname { color: var(--causal-outcome); }
+  .n.outcome        .role-tag { background: #e6f6ec; color: var(--causal-outcome); }
+
+  /* Layout positions (% of stage) */
+  .p-error    { top: 18%; left: 14%; }
+  .p-cb       { top: 38%; left: 14%; }
+  .p-ctx      { top: 58%; left: 14%; }
+  .p-hyp      { top: 28%; left: 40%; }
+  .p-tool     { top: 50%; left: 50%; }
+  .p-info     { top: 50%; left: 70%; }
+  .p-root     { top: 30%; left: 78%; }
+  .p-patch    { top: 14%; left: 70%; }
+  .p-tests    { top: 80%; left: 78%; }
+
+  /* Annotated equations panel */
+  .equations {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 18px;
+    margin-top: 22px;
+  }
+  .eq {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px 16px;
+  }
+  .eq .title { font-size: 13px; font-weight: 700; color: var(--ink-strong); margin-bottom: 6px; }
+  .eq .formula {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: var(--luminate-light);
+    padding: 8px 10px;
+    border-radius: 6px;
+    color: var(--luminate-dark);
+    margin-bottom: 6px;
+  }
+  .eq .note { font-size: 11.5px; color: var(--ink-muted); line-height: 1.4; }
+</style>
+</head>
+<body>
+<div class="canvas">
+
+  <div class="title-block">
+    <div class="left">
+      <div class="figure-tag">Figure 02 — Causal Model</div>
+      <h1>The Canonical 9-Node Debugging SCM</h1>
+      <p class="subtitle">Hand-authored DAG governing the debugging domain (<code>src/causa/domain/scm_debugging.py</code>)</p>
+    </div>
+    <div class="brand-pill">Causa · §C2</div>
+  </div>
+
+  <div class="scm-stage">
+
+    <svg class="flow-svg" viewBox="0 0 1572 720" preserveAspectRatio="none">
+      <defs>
+        <marker id="arrow" viewBox="0 0 12 12" refX="9" refY="6" markerWidth="9" markerHeight="9" orient="auto">
+          <path d="M0,0 L10,6 L0,12 Z" fill="#3c228a" opacity="0.7"/>
+        </marker>
+      </defs>
+      <!-- error_message_type → hypothesis_space -->
+      <path d="M 320 130 Q 470 130 590 200" />
+      <!-- codebase_structure → hypothesis_space -->
+      <path d="M 320 275 Q 470 240 590 220" />
+      <!-- hypothesis_space → tool_selected -->
+      <path d="M 720 230 Q 760 300 770 360" />
+      <!-- tool_selected → information_gained -->
+      <path d="M 850 360 Q 990 360 1080 360" />
+      <!-- context_available → information_gained -->
+      <path d="M 320 420 Q 700 600 1070 380" />
+      <!-- information_gained → root_cause_identified -->
+      <path d="M 1170 340 Q 1210 280 1230 240" />
+      <!-- root_cause_identified → patch_quality -->
+      <path d="M 1230 200 Q 1190 140 1140 110" />
+      <!-- patch_quality → tests_passed -->
+      <path d="M 1170 140 Q 1300 380 1260 560" class="thick" />
+    </svg>
+
+    <!-- 9 nodes -->
+    <div class="n observational p-error">
+      <div class="vname">error_message_type</div>
+      <span class="role-tag">observational</span>
+      <div class="desc">type_error · runtime_error · logic_error</div>
+    </div>
+    <div class="n observational p-cb">
+      <div class="vname">codebase_structure</div>
+      <span class="role-tag">observational</span>
+      <div class="desc">small_flat · medium_modular · large_complex</div>
+    </div>
+    <div class="n observational p-ctx">
+      <div class="vname">context_available</div>
+      <span class="role-tag">observational</span>
+      <div class="desc">none · partial · full</div>
+    </div>
+    <div class="n mediator p-hyp">
+      <div class="vname">hypothesis_space</div>
+      <span class="role-tag">mediator</span>
+      <div class="desc">narrow · moderate · broad</div>
+    </div>
+    <div class="n action p-tool">
+      <div class="vname">tool_selected</div>
+      <span class="role-tag">action · X</span>
+      <div class="desc">8-way: code_search · trace · diff · …</div>
+    </div>
+    <div class="n mediator p-info">
+      <div class="vname">information_gained</div>
+      <span class="role-tag">mediator</span>
+      <div class="desc">low · medium · high</div>
+    </div>
+    <div class="n mediator p-root">
+      <div class="vname">root_cause_identified</div>
+      <span class="role-tag">mediator</span>
+      <div class="desc">false · partial · true</div>
+    </div>
+    <div class="n mediator p-patch">
+      <div class="vname">patch_quality</div>
+      <span class="role-tag">mediator</span>
+      <div class="desc">none · partial · correct</div>
+    </div>
+    <div class="n outcome p-tests">
+      <div class="vname">tests_passed</div>
+      <span class="role-tag">outcome · Y</span>
+      <div class="desc">0.0 — 1.0 fraction of held-out tests</div>
+    </div>
+
+  </div>
+
+  <div class="equations">
+    <div class="eq">
+      <div class="title">Effect of interest</div>
+      <div class="formula">E[Y | do(X = a)] = ?</div>
+      <div class="note">For each candidate tool <em>a</em>, what is the expected test-pass rate <em>under intervention</em>?  This is what <code>DoWhyActionScorer</code> ranks.</div>
+    </div>
+    <div class="eq">
+      <div class="title">Back-door adjustment set</div>
+      <div class="formula">Z = { error_message_type,<br>      codebase_structure,<br>      context_available }</div>
+      <div class="note">The three observational variables block every back-door path from <em>tool_selected</em> to <em>tests_passed</em>. Identification is satisfied by <code>causa.core.identifiability</code>.</div>
+    </div>
+    <div class="eq">
+      <div class="title">Identification (do-calculus rule 2)</div>
+      <div class="formula">P(Y | do(X)) = Σ_z P(Y | X, Z) P(Z)</div>
+      <div class="note">Plug-in estimator: linear regression of Y on X with Z controlled. Implemented by <code>LinearRegressionEstimator</code>.</div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--causal-confounder);"></div>Observational</div>
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--causal-mediator);"></div>Mediator</div>
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--causal-treatment);"></div>Action</div>
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--causal-outcome);"></div>Outcome</div>
+  </div>
+
+  <div class="footer-note">
+    Source: <strong>causa.domain.scm_debugging.build_debugging_scm()</strong> · 9 variables · 8 directed edges · DAG verified
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Causa — Distribution-Shift Partitioner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_shared.css">
+<style>
+  .axis-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    margin-top: 22px;
+  }
+  .axis {
+    background: white;
+    border: 1px solid var(--line);
+    border-top: 4px solid var(--luminate-primary);
+    border-radius: 14px;
+    padding: 18px 18px 14px;
+  }
+  .axis .name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--luminate-primary);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .axis .description {
+    font-size: 12px;
+    color: var(--ink-muted);
+    margin-bottom: 14px;
+    line-height: 1.45;
+  }
+  .axis .lane { margin-bottom: 8px; }
+  .axis .lane .header {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 4px;
+  }
+  .axis .lane .header .label {
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+  }
+  .axis .lane .badges { display: flex; gap: 6px; flex-wrap: wrap; }
+  .axis .lane .badges .v {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 999px;
+  }
+  .axis .lane.iid  .v { background: #e8f1fd; color: var(--blue);  border: 1px solid rgba(26, 78, 160, 0.2); }
+  .axis .lane.ood  .v { background: #fdecec; color: var(--red);   border: 1px solid rgba(203, 32, 34, 0.2); }
+
+  .partition-flow {
+    margin-top: 26px;
+    display: grid;
+    grid-template-columns: 1fr 60px 1.4fr;
+    gap: 24px;
+    align-items: stretch;
+  }
+  .panel {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 18px 22px;
+  }
+  .panel h3 {
+    font-size: 13px;
+    color: var(--luminate-primary);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .arrow-glyph {
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px; color: var(--luminate-primary);
+  }
+
+  .buckets {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+  }
+  .bucket {
+    border-radius: 12px;
+    padding: 12px 14px;
+    color: white;
+    text-align: center;
+    min-height: 110px;
+  }
+  .bucket .ttl { font-size: 14px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 4px; }
+  .bucket .pct { font-family: 'JetBrains Mono', monospace; font-size: 22px; font-weight: 700; }
+  .bucket .sub { font-size: 11px; font-weight: 500; opacity: 0.9; margin-top: 2px; }
+  .bucket.iid       { background: linear-gradient(135deg, var(--causal-confounder), #4670c8); }
+  .bucket.ood       { background: linear-gradient(135deg, var(--red), #d96062); }
+  .bucket.unlabeled { background: linear-gradient(135deg, var(--ink-faint), #92959f); }
+
+  .code-pseudo {
+    margin-top: 16px;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    line-height: 1.55;
+    color: var(--luminate-dark);
+    white-space: pre;
+    overflow-x: auto;
+  }
+</style>
+</head>
+<body>
+<div class="canvas">
+
+  <div class="title-block">
+    <div class="left">
+      <div class="figure-tag">Figure 07 — Evaluation</div>
+      <h1>Distribution-Shift Partitioner</h1>
+      <p class="subtitle">Four-axis SWE-bench classification — IID vs OOD vs Unlabeled</p>
+    </div>
+    <div class="brand-pill">Causa · §H2</div>
+  </div>
+
+  <div class="axis-grid">
+
+    <div class="axis">
+      <div class="name">Language</div>
+      <p class="description">Source language of the test bug. Held-out languages stress lexical &amp; idiomatic transfer.</p>
+      <div class="lane iid">
+        <div class="header"><span class="label">IID</span></div>
+        <div class="badges"><span class="v">python</span><span class="v">javascript</span></div>
+      </div>
+      <div class="lane ood">
+        <div class="header"><span class="label">OOD (held out)</span></div>
+        <div class="badges"><span class="v">java</span><span class="v">rust</span><span class="v">go</span></div>
+      </div>
+    </div>
+
+    <div class="axis">
+      <div class="name">Framework</div>
+      <p class="description">Library / framework context. Held-out frameworks force the agent to generalise tool-use patterns.</p>
+      <div class="lane iid">
+        <div class="header"><span class="label">IID</span></div>
+        <div class="badges"><span class="v">django</span><span class="v">flask</span><span class="v">express</span><span class="v">react</span></div>
+      </div>
+      <div class="lane ood">
+        <div class="header"><span class="label">OOD (held out)</span></div>
+        <div class="badges"><span class="v">spring</span><span class="v">rails</span></div>
+      </div>
+    </div>
+
+    <div class="axis">
+      <div class="name">Bug type</div>
+      <p class="description">Failure semantics. Causal mechanism for solving a logic_error is qualitatively different from a type_error.</p>
+      <div class="lane iid">
+        <div class="header"><span class="label">IID</span></div>
+        <div class="badges"><span class="v">type_error</span><span class="v">runtime_error</span><span class="v">test_failure</span></div>
+      </div>
+      <div class="lane ood">
+        <div class="header"><span class="label">OOD (held out)</span></div>
+        <div class="badges"><span class="v">logic_error</span></div>
+      </div>
+    </div>
+
+    <div class="axis">
+      <div class="name">Codebase size</div>
+      <p class="description">Repository complexity. Held-out size measures whether tool-budget strategy scales.</p>
+      <div class="lane iid">
+        <div class="header"><span class="label">IID</span></div>
+        <div class="badges"><span class="v">small</span><span class="v">medium</span></div>
+      </div>
+      <div class="lane ood">
+        <div class="header"><span class="label">OOD (held out)</span></div>
+        <div class="badges"><span class="v">large</span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="partition-flow">
+
+    <div class="panel">
+      <h3>Default policy (default_policy)</h3>
+      <p style="font-size: 12.5px; color: var(--ink); line-height: 1.55;">
+        Holds out two axes simultaneously: <strong>framework=spring</strong> and
+        <strong>codebase_size=large</strong>. A task lands in OOD if it matches
+        <em>any</em> held-out value. Tasks missing any required axis are
+        returned as Unlabeled — never silently misclassified.
+      </p>
+      <div class="code-pseudo">policy = PartitionPolicy(
+    held_out={
+        PartitionAxis.FRAMEWORK: {"spring"},
+        PartitionAxis.CODEBASE_SIZE: {"large"},
+    },
+    name="default",
+)
+policy.assign(task)
+# → PartitionLabel.IID | OOD | None</div>
+    </div>
+
+    <div class="arrow-glyph">⟶</div>
+
+    <div class="panel">
+      <h3>SplitPartitioner output (3 buckets)</h3>
+      <div class="buckets">
+        <div class="bucket iid">
+          <div class="ttl">IID</div>
+          <div class="pct">62%</div>
+          <div class="sub">training-like — fair causal regime</div>
+        </div>
+        <div class="bucket ood">
+          <div class="ttl">OOD</div>
+          <div class="pct">31%</div>
+          <div class="sub">spring · large repos · held out</div>
+        </div>
+        <div class="bucket unlabeled">
+          <div class="ttl">UNLABELED</div>
+          <div class="pct">7%</div>
+          <div class="sub">missing axes — reported separately</div>
+        </div>
+      </div>
+      <p style="font-size: 12px; color: var(--ink-muted); margin-top: 12px; line-height: 1.5;">
+        The runner aggregates per-bucket metrics — success rate, mean outcome, mean steps-to-success — so the
+        §H4 IID vs OOD delta is a clean within-method paired comparison. Statistical tests run per bucket.
+      </p>
+    </div>
+
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--blue);"></div>IID (training-like)</div>
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--red);"></div>OOD (held out)</div>
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--ink-faint);"></div>Unlabeled</div>
+  </div>
+
+  <div class="footer-note">
+    Implementation: <strong>causa.evaluation.partition</strong> · 4-axis policy · per-task assignment in O(1)
+  </div>
+
+</div>
+</body>
+</html>

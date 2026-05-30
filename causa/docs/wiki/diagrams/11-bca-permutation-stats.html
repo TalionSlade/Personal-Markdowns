@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Causa — BCa Bootstrap &amp; Paired Permutation Tests</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="_shared.css">
+<style>
+  .grid2 {
+    margin-top: 22px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 26px;
+  }
+  .test-card {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 22px 24px;
+  }
+  .test-card .name {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--ink-strong);
+    margin-bottom: 4px;
+  }
+  .test-card .sub { font-size: 12.5px; color: var(--ink-muted); margin-bottom: 14px; }
+  .test-card.bca { border-top: 4px solid var(--causal-confounder); }
+  .test-card.perm{ border-top: 4px solid var(--causal-treatment); }
+
+  .pipeline {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .pipe-row {
+    display: grid;
+    grid-template-columns: 32px 1fr;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .pipe-row .n {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    color: white;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+    font-size: 13px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .test-card.bca .pipe-row .n  { background: var(--causal-confounder); }
+  .test-card.perm .pipe-row .n { background: var(--causal-treatment); }
+  .pipe-row .text {
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--ink);
+  }
+  .pipe-row .text code, .pipe-row .text .mono {
+    background: var(--surface-2);
+    padding: 1px 6px;
+    border-radius: 4px;
+    border: 1px solid var(--line);
+  }
+
+  .formula-box {
+    margin-top: 14px;
+    background: var(--luminate-light);
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--luminate-dark);
+    line-height: 1.55;
+    white-space: pre-wrap;
+  }
+  .formula-box .lbl {
+    font-family: 'Inter', sans-serif;
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--luminate-primary);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .props {
+    margin-top: 14px;
+    background: #effaf3;
+    border-left: 4px solid var(--green);
+    border-radius: 0 8px 8px 0;
+    padding: 12px 14px;
+    font-size: 12px;
+    line-height: 1.55;
+    color: var(--ink);
+  }
+  .props strong { color: var(--green); }
+
+  .empirical {
+    margin-top: 26px;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 22px 24px;
+  }
+  .empirical h3 {
+    font-size: 13px;
+    color: var(--luminate-primary);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .ci-row { margin-bottom: 14px; }
+  .ci-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-strong);
+    font-weight: 700;
+    margin-bottom: 4px;
+    display: flex; justify-content: space-between;
+  }
+  .ci-bar {
+    position: relative;
+    height: 32px;
+    background: var(--surface-3);
+    border-radius: 6px;
+  }
+  .ci-fill {
+    position: absolute;
+    top: 4px; bottom: 4px;
+    background: linear-gradient(90deg, rgba(60,34,138,0.6), rgba(98,69,183,0.7));
+    border-radius: 4px;
+  }
+  .ci-point {
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 3px;
+    background: var(--luminate-dark);
+    border-radius: 2px;
+  }
+  .ci-axis {
+    margin-top: 4px;
+    display: flex;
+    justify-content: space-between;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--ink-muted);
+  }
+</style>
+</head>
+<body>
+<div class="canvas">
+
+  <div class="title-block">
+    <div class="left">
+      <div class="figure-tag">Figure 11 — Statistics</div>
+      <h1>BCa Bootstrap &amp; Paired Permutation Tests</h1>
+      <p class="subtitle">Distribution-free uncertainty estimates with no SciPy dependency</p>
+    </div>
+    <div class="brand-pill">Causa · §K2</div>
+  </div>
+
+  <div class="grid2">
+
+    <div class="test-card bca">
+      <div class="name">BCa bootstrap CI for the mean</div>
+      <div class="sub">Bias-corrected, accelerated bootstrap — Acklam normal-inverse approximation keeps the implementation SciPy-free.</div>
+
+      <div class="pipeline">
+        <div class="pipe-row"><div class="n">1</div><div class="text">Draw B bootstrap resamples of size n (default <code>n_bootstrap=2000</code>) from the observation sample.</div></div>
+        <div class="pipe-row"><div class="n">2</div><div class="text">Compute the statistic (mean) on each resample → <code>boot_means</code>.</div></div>
+        <div class="pipe-row"><div class="n">3</div><div class="text">Bias correction <code>z0</code> from the fraction of <code>boot_means &lt; θ_hat</code>.</div></div>
+        <div class="pipe-row"><div class="n">4</div><div class="text">Acceleration <code>a</code> from jackknife skewness — handles non-symmetric distributions.</div></div>
+        <div class="pipe-row"><div class="n">5</div><div class="text">Adjusted percentiles α<sub>1</sub>, α<sub>2</sub> via the normal-inverse approximation; return the quantiles.</div></div>
+      </div>
+
+      <div class="formula-box">
+<div class="lbl">Acceleration</div>
+a = Σ (θ̄ − θ_i)³ / [6 · (Σ (θ̄ − θ_i)²)^{1.5}]
+&nbsp;
+<div class="lbl">Adjusted quantile</div>
+α_k = Φ(z0 + (z0 + z_k) / (1 − a (z0 + z_k)))
+      </div>
+
+      <div class="props">
+        <strong>Invariants</strong> — <em>n ≥ 2</em> required; <em>seed reproducible</em>; lower &lt; point &lt; upper always; the CI contains the true mean ≥ 95% of the time for high-n samples (covered by test_stats).
+      </div>
+    </div>
+
+    <div class="test-card perm">
+      <div class="name">Paired permutation test (sign-flip)</div>
+      <div class="sub">Exhaustive enumeration for small n; Monte Carlo with Phipson-Smyth correction above.</div>
+
+      <div class="pipeline">
+        <div class="pipe-row"><div class="n">1</div><div class="text">Compute observed mean difference <code>θ̂ = mean(a) − mean(b)</code>.</div></div>
+        <div class="pipe-row"><div class="n">2</div><div class="text">If <em>n ≤ 14</em>: enumerate all 2<sup>n</sup> sign-flip vectors of (a − b); count those with |Δ| ≥ |θ̂|.</div></div>
+        <div class="pipe-row"><div class="n">3</div><div class="text">Else: draw <code>n_permutations</code> random sign-flips (default 10,000).</div></div>
+        <div class="pipe-row"><div class="n">4</div><div class="text">Apply <em>+1 Phipson-Smyth correction</em> for Monte Carlo: <code>p = (k+1) / (B+1)</code>.</div></div>
+        <div class="pipe-row"><div class="n">5</div><div class="text">Return <code>PermutationResult(method, mean_diff, p_value)</code>.</div></div>
+      </div>
+
+      <div class="formula-box">
+<div class="lbl">Exact regime</div>
+p = #{ ε ∈ {±1}^n : |mean(ε ⊙ d)| ≥ |θ̂| } / 2^n
+
+<div class="lbl">Monte Carlo regime</div>
+p̂ = (1 + #{ε_b : |mean(ε_b ⊙ d)| ≥ |θ̂|}) / (1 + B)
+      </div>
+
+      <div class="props">
+        <strong>Why Phipson-Smyth?</strong> Naive p̂ = k/B can equal 0 for finite B; the +1 correction guarantees a strictly positive lower bound (so <code>−log p</code> is finite). Required for valid downstream meta-analysis.
+      </div>
+    </div>
+
+  </div>
+
+  <div class="empirical">
+    <h3>Sample BCa intervals (illustrative)</h3>
+
+    <div class="ci-row">
+      <div class="ci-label"><span>CAUSAL success rate, IID</span><span>0.640 (0.612, 0.668)</span></div>
+      <div class="ci-bar">
+        <div class="ci-fill" style="left: 55%; right: 28%;"></div>
+        <div class="ci-point" style="left: 62%;"></div>
+      </div>
+      <div class="ci-axis"><span>0.30</span><span>0.40</span><span>0.50</span><span>0.60</span><span>0.70</span><span>0.80</span><span>0.90</span></div>
+    </div>
+
+    <div class="ci-row">
+      <div class="ci-label"><span>CAUSAL success rate, OOD</span><span>0.541 (0.512, 0.572)</span></div>
+      <div class="ci-bar">
+        <div class="ci-fill" style="left: 47%; right: 38%;"></div>
+        <div class="ci-point" style="left: 52%;"></div>
+      </div>
+      <div class="ci-axis"><span>0.30</span><span>0.40</span><span>0.50</span><span>0.60</span><span>0.70</span><span>0.80</span><span>0.90</span></div>
+    </div>
+
+    <div class="ci-row">
+      <div class="ci-label"><span>ReAct success rate, OOD</span><span>0.408 (0.371, 0.444)</span></div>
+      <div class="ci-bar">
+        <div class="ci-fill" style="left: 27%; right: 52%;"></div>
+        <div class="ci-point" style="left: 39%;"></div>
+      </div>
+      <div class="ci-axis"><span>0.30</span><span>0.40</span><span>0.50</span><span>0.60</span><span>0.70</span><span>0.80</span><span>0.90</span></div>
+    </div>
+
+    <div class="ci-row">
+      <div class="ci-label"><span>NO_MEMORY floor, OOD</span><span>0.198 (0.169, 0.227)</span></div>
+      <div class="ci-bar">
+        <div class="ci-fill" style="left: 9%; right: 73%;"></div>
+        <div class="ci-point" style="left: 19%;"></div>
+      </div>
+      <div class="ci-axis"><span>0.30</span><span>0.40</span><span>0.50</span><span>0.60</span><span>0.70</span><span>0.80</span><span>0.90</span></div>
+    </div>
+
+    <p style="font-size: 11.5px; color: var(--ink-muted); margin-top: 6px;">
+      Paired permutation test, OOD bucket, CAUSAL vs ReAct: <strong>mean Δ = +0.133, p &lt; 0.001 (Monte Carlo, B=10,000)</strong>.
+    </p>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--causal-confounder);"></div>BCa CI</div>
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--causal-treatment);"></div>Permutation test</div>
+    <div class="legend-item"><div class="legend-swatch" style="background: var(--luminate-dark);"></div>point estimate</div>
+  </div>
+
+  <div class="footer-note">
+    Implementation: <strong>causa.evaluation.stats</strong> · Acklam Φ⁻¹ rational approx · jackknife acceleration · zero external numerics dependency
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Causa — Documentation Index</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="diagrams/_shared.css">
+<style>
+  body { padding: 40px 20px; }
+  .index-canvas {
+    width: 1700px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 22px;
+    box-shadow: 0 30px 80px -30px rgba(19, 1, 74, 0.18);
+    overflow: hidden;
+    border: 1px solid var(--line);
+  }
+
+  .hero {
+    padding: 56px 64px 44px;
+    background: linear-gradient(135deg, var(--luminate-primary) 0%, var(--luminate-dark) 100%);
+    color: white;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::after {
+    content: '';
+    position: absolute;
+    top: -120px; right: -120px;
+    width: 400px; height: 400px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,0.08), transparent 70%);
+  }
+  .hero .tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    opacity: 0.7;
+    margin-bottom: 12px;
+  }
+  .hero h1 {
+    font-size: 52px;
+    letter-spacing: -0.03em;
+    font-weight: 700;
+    line-height: 1.05;
+    margin-bottom: 10px;
+  }
+  .hero .subtitle {
+    font-size: 19px;
+    font-weight: 400;
+    opacity: 0.85;
+    max-width: 900px;
+    line-height: 1.5;
+    margin-bottom: 28px;
+  }
+  .hero .meta {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+  }
+  .hero .meta .pill {
+    padding: 6px 14px;
+    background: rgba(255,255,255,0.12);
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    backdrop-filter: blur(8px);
+  }
+  .hero .author {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    opacity: 0.85;
+  }
+  .hero .author strong { color: white; font-weight: 600; }
+
+  .content {
+    padding: 48px 64px 56px;
+  }
+
+  .section-header {
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 22px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--luminate-primary);
+  }
+  .section-header h2 {
+    font-size: 26px;
+    color: var(--ink-strong);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .section-header .badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--luminate-primary);
+    background: var(--luminate-light);
+    padding: 4px 10px;
+    border-radius: 6px;
+  }
+
+  .quicklinks {
+    margin-top: 16px;
+    margin-bottom: 48px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+  }
+  .qlink {
+    display: block;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--luminate-primary);
+    border-radius: 0 12px 12px 0;
+    padding: 20px 22px;
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.18s, box-shadow 0.18s;
+  }
+  .qlink:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 28px -14px rgba(19, 1, 74, 0.18);
+  }
+  .qlink .title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--ink-strong);
+    margin-bottom: 6px;
+  }
+  .qlink .desc {
+    font-size: 13px;
+    color: var(--ink-muted);
+    line-height: 1.5;
+  }
+  .qlink .arrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--luminate-primary);
+    margin-top: 8px;
+    font-weight: 700;
+  }
+
+  .diagram-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+    margin-bottom: 48px;
+  }
+  .diagram-card {
+    display: block;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 20px 22px;
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s;
+    position: relative;
+  }
+  .diagram-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 14px 32px -14px rgba(19, 1, 74, 0.2);
+    border-color: var(--luminate-primary);
+  }
+  .diagram-card .num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+    color: var(--ink-faint);
+    margin-bottom: 4px;
+  }
+  .diagram-card .title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ink-strong);
+    margin-bottom: 6px;
+  }
+  .diagram-card .desc {
+    font-size: 12.5px;
+    color: var(--ink-muted);
+    line-height: 1.5;
+    margin-bottom: 8px;
+  }
+  .diagram-card .tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--luminate-primary);
+    background: var(--luminate-light);
+    padding: 2px 8px;
+    border-radius: 4px;
+    display: inline-block;
+  }
+
+  .columns2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 48px;
+  }
+  .column-card {
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 24px 28px;
+  }
+  .column-card h3 {
+    font-size: 17px;
+    color: var(--ink-strong);
+    margin-bottom: 12px;
+    font-weight: 700;
+  }
+  .column-card p {
+    font-size: 13.5px;
+    color: var(--ink);
+    line-height: 1.6;
+    margin-bottom: 10px;
+  }
+  .column-card pre {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 12px 14px;
+    color: var(--luminate-dark);
+    line-height: 1.5;
+    overflow-x: auto;
+    margin: 8px 0;
+  }
+  .column-card code { background: var(--surface-2); padding: 1px 6px; border-radius: 4px; border: 1px solid var(--line); }
+
+  footer.page-footer {
+    padding: 24px 64px;
+    background: var(--surface-2);
+    border-top: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-muted);
+  }
+  footer.page-footer strong { color: var(--luminate-primary); }
+
+</style>
+</head>
+<body>
+
+<div class="index-canvas">
+
+  <div class="hero">
+    <div class="tag">M.Tech Dissertation · BITS Pilani · May 2026</div>
+    <h1>Causa</h1>
+    <div class="subtitle">A reference implementation of Pearl-style causal planning, counterfactual reflection, and distribution-shift evaluation for LLM debugging agents.</div>
+    <div class="meta">
+      <span class="pill">⬢ Hexagonal architecture</span>
+      <span class="pill">⊕ Do-calculus action scoring</span>
+      <span class="pill">↻ Counterfactual reflection</span>
+      <span class="pill">⇆ 4-axis OOD evaluation</span>
+      <span class="pill">JSONL auditable traces</span>
+    </div>
+    <div class="author">by <strong>Arpan Ghosh</strong> · <em>Causal Planning for LLM Agents: A Framework for Robust Decision-Making Under Distribution Shift</em></div>
+  </div>
+
+  <div class="content">
+
+    <div class="section-header">
+      <h2>Start here</h2>
+      <span class="badge">orientation</span>
+    </div>
+
+    <div class="quicklinks">
+      <a class="qlink" href="WIKI.md">
+        <div class="title">📖 Master Wiki</div>
+        <div class="desc">The single document that orients you to Causa — what it is, how it's structured, where each module lives, and how the six ablation arms compare.</div>
+        <div class="arrow">→ WIKI.md</div>
+      </a>
+      <a class="qlink" href="diagrams/01-system-overview.html">
+        <div class="title">🏛 System Overview</div>
+        <div class="desc">The hexagonal architecture in one canvas — core, ports, adapters, application layer. Start here if you're new to the codebase.</div>
+        <div class="arrow">→ Figure 01</div>
+      </a>
+      <a class="qlink" href="diagrams/15-dissertation-roadmap.html">
+        <div class="title">🗺 Dissertation Roadmap</div>
+        <div class="desc">Each §A–§N chapter mapped to its implementing module and supporting diagram. Use this to cross-reference the document.</div>
+        <div class="arrow">→ Figure 15</div>
+      </a>
+    </div>
+
+    <div class="section-header">
+      <h2>Diagram library</h2>
+      <span class="badge">15 figures · 1700×1100</span>
+    </div>
+
+    <div class="diagram-grid">
+
+      <a class="diagram-card" href="diagrams/01-system-overview.html">
+        <div class="num">FIGURE 01</div>
+        <div class="title">System Overview</div>
+        <div class="desc">Hexagonal layering: core (pure SCM algebra) → application (planning, reflection) → ports/adapters.</div>
+        <span class="tag">Architecture</span>
+      </a>
+
+      <a class="diagram-card" href="diagrams/02-debugging-scm.html">
+        <div class="num">FIGURE 02</div>
+        <div class="title">9-Node Debugging SCM</div>
+        <div class="desc">The canonical hand-authored DAG — three observational variables, four mediators, one action, one outcome.</div>
+        <span class="tag">Causal Model</span>
+      </a>
+
+      <a class="diagram-card" href="diagrams/03-do-calculus-pipeline.html">
+        <div class="num">FIGURE 03</div>
+        <div class="title">Do-Calculus Pipeline</div>
+        <div class="desc">Identify → Estimate → Rank → Audit. The core of <code>DoWhyActionScorer</code>.</div>
+        <span class="tag">Algorithm</span>
+      </a>
+
+      <a class="diagram-card" href="diagrams/04-causal-planning-agent.html">
+        <div class="num">FIGURE 04</div>
+        <div class="title">Causal Planning Agent</div>
+        <div class="desc">The decision loop body of <code>CausalPlanningAgent</code> with annotated termination and reflection arrows.</div>
+        <span class="tag">Control Flow</span>
+      </a>
+
+      <a class="diagram-card" href="diagrams/05-ablation-arms.html">
+        <div class="num">FIGURE 05</div>
+        <div class="title">Six Ablation Arms</div>
+        <div class="desc">Capability matrix and side-by-side cards for the §J3 ablations.</div>
+        <span class="tag">Ablations</span>
+      </a>
+
+      <a class="diagram-card" href="diagrams/06-counterfactual-reflection.html">
+        <div class="num">FIGURE 06</div>
+        <div class="title">Counterfactual Reflection</div>
+        <div class="desc">CRM trigger algorithm, adaptive threshold, and a worked 4-step timeline.</div>
+        <span class="tag">Component 4</span>
+      </a>
+
+      <a class="diagram-card" href="diagrams/07-distribution-shift-partition.html">
+        <div class="num">FIGURE 07</div>
+        <div class="title">Distribution-Shift Partitioner</div>
+        <div class="desc">4-axis classification (language × framework × bug_type × codebase_size) into IID / OOD / Unlabeled.</div>
+        <span class="tag">Evaluation</span>
+      </a>
+
+      <a class="diagram-card" href="diagrams/08-trace-event-flow.html">
+        <div class="num">FIGURE 08</div>
+        <div class="title">Trace Event Flow</div>
+        <div class="desc">JSON Lines pipeline from runner observer through <code>TraceWriter</code> to <code>TraceAudit</code>.</div>
+        <span class="tag">Telemetry</span>
+      </a>
+
+      <a class="diagram-card" href="diagrams/09-cold-start-vs-steady.html">
+        <div class="num">FIGURE 09</div>
+        <div class="title">Cold-Start vs Steady-State</div>
+        <div class="desc">When the SCM falls back to LLM scoring and how the auditor distinguishes the regimes.</div>
+        <span class="tag">Regime Switch</span>
+      </a>
+
+      <a class="diagram-card" href="diagrams/10-evaluation-runner.html">
+        <div class="num">FIGURE 10</div>
+        <div class="title">EvaluationRunner</div>
+        <div class="desc">Serial &amp; parallel timelines, RunObserver protocol, canonical event order.</div>
+        <span class="tag">Eval Plumbing</span>
+      </a>
+
+      <a class="diagram-card" href="diagrams/11-bca-permutation-stats.html">
+        <div class="num">FIGURE 11</div>
+        <div class="title">BCa &amp; Permutation Stats</div>
+        <div class="desc">SciPy-free implementations of bias-corrected accelerated CIs and paired permutation tests.</div>
+        <span class="tag">Statistics</span>
+      </a>
+
+      <a class="diagram-card" href="diagrams/12-llm-graph-extraction.html">
+        <div class="num">FIGURE 12</div>
+        <div class="title">LLM Graph Extraction</div>
+        <div class="desc">Component 1's cold-start path for novel domains: propose, filter, validate, audit.</div>
+        <span class="tag">Component 1</span>
+      </a>
+
+      <a class="diagram-card" href="diagrams/13-end-to-end-data-flow.html">
+        <div class="num">FIGURE 13</div>
+        <div class="title">End-to-End Data Flow</div>
+        <div class="desc">From SWE-bench tasks all the way through to BCa-augmented report tables.</div>
+        <span class="tag">End-to-End</span>
+      </a>
+
+      <a class="diagram-card" href="diagrams/14-four-components.html">
+        <div class="num">FIGURE 14</div>
+        <div class="title">Four Components</div>
+        <div class="desc">SCM Specification · Action Scorer · Planning Agent · Counterfactual Reflection — at a glance.</div>
+        <span class="tag">Architecture</span>
+      </a>
+
+      <a class="diagram-card" href="diagrams/15-dissertation-roadmap.html">
+        <div class="num">FIGURE 15</div>
+        <div class="title">Dissertation Roadmap</div>
+        <div class="desc">Every §A–§N chapter cross-referenced with its module &amp; supporting figure.</div>
+        <span class="tag">Roadmap</span>
+      </a>
+
+    </div>
+
+    <div class="section-header">
+      <h2>For the impatient reader</h2>
+      <span class="badge">90 seconds</span>
+    </div>
+
+    <div class="columns2">
+      <div class="column-card">
+        <h3>The single biggest design idea</h3>
+        <p>
+          The agent's outer loop — step budget, state transition, trace emission — is shared
+          across all six ablation arms in <code>BaseAgent</code>. Only the
+          <code>_choose_action</code>, <code>_after_step</code>, and
+          <code>_next_state</code> hooks vary. This is the seam the dissertation's §J3
+          ablations cut along, and it's what makes the comparison
+          <strong>strictly ceteris-paribus</strong>.
+        </p>
+<pre>for step_index in range(self._step_budget):
+    ctx    = self._snapshot_context(step_index, state)
+    choice = self._choose_action(candidates, ctx, task)   # 🔧 varies
+    output = self._tools[choice.action.name](...)
+    self._after_step(step=step, task=task, state=state)   # 🔧 varies
+    state  = self._next_state(prev_state=state,           # 🔧 varies
+                              observation=obs)</pre>
+      </div>
+
+      <div class="column-card">
+        <h3>The single most important file</h3>
+        <p>
+          <code>causa.planning.dowhy_scorer.DoWhyActionScorer</code> — it is the operational
+          core of Component 2. It identifies the back-door set, fits the
+          plug-in estimator, and emits a typed <code>ActionScore</code> with the
+          adjustment set surfaced in its rationale for downstream auditing.
+        </p>
+<pre>def score(self, candidates, *, state, history):
+    Z = identify_effect(self.scm.graph,
+                        X=self.action_var,
+                        Y=self.outcome_var).adjustment_set
+    out = []
+    for c in candidates:
+        est = self.estimator.estimate(
+            data=history, treatment=self.action_var,
+            outcome=self.outcome_var,
+            treatment_value=c.name,
+            adjustment_set=Z,
+        )
+        out.append(ActionScore(
+            action=c, score=est.value,
+            rationale=f"via back-door {sorted(Z)}",
+            adjustment_set=Z))
+    return out</pre>
+      </div>
+    </div>
+
+  </div>
+
+  <footer class="page-footer">
+    <span><strong>Causa</strong> · MIT licensed · pure Python 3.10+ · ~60 source modules</span>
+    <span>by <strong>Arpan Ghosh</strong> · BITS Pilani · M.Tech Dissertation · May 2026</span>
+  </footer>
+
+</div>
+
+</body>
+</html>
