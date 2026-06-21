@@ -1,0 +1,76 @@
+{
+  "timestamp": "20260620_135903",
+  "n_tasks": 70,
+  "settings": {
+    "llm_provider": "mock",
+    "llm_model": "claude-3-5-sonnet-latest",
+    "llm_temperature": 0.0,
+    "llm_max_tokens": 2048,
+    "warm_start_prior_size": 40,
+    "dowhy_min_history": 10,
+    "dowhy_estimator": "linear_regression",
+    "reflection_threshold": 0.15,
+    "reflection_samples": 3,
+    "step_budget": 12,
+    "trace_dir": "traces",
+    "swe_bench_cache": "data\\cache\\swe-bench",
+    "bootstrap_iterations": 1000,
+    "random_seed": 42
+  },
+  "results": [
+    {
+      "arm": "causal",
+      "n_tasks": 70,
+      "success_rate": 0.0,
+      "mean_outcome": null,
+      "mean_steps_to_success": null,
+      "reflection_trigger_rate": null,
+      "elapsed_seconds": 1.04
+    },
+    {
+      "arm": "causal_no_reflection",
+      "n_tasks": 70,
+      "success_rate": 0.0,
+      "mean_outcome": null,
+      "mean_steps_to_success": null,
+      "reflection_trigger_rate": null,
+      "elapsed_seconds": 0.04
+    },
+    {
+      "arm": "llm_scorer",
+      "n_tasks": 70,
+      "success_rate": 0.0,
+      "mean_outcome": 0.5849,
+      "mean_steps_to_success": null,
+      "reflection_trigger_rate": null,
+      "elapsed_seconds": 0.91
+    },
+    {
+      "arm": "react",
+      "n_tasks": 70,
+      "success_rate": 0.0,
+      "mean_outcome": 0.6023428571428572,
+      "mean_steps_to_success": null,
+      "reflection_trigger_rate": null,
+      "elapsed_seconds": 0.03
+    },
+    {
+      "arm": "cot",
+      "n_tasks": 70,
+      "success_rate": 0.0,
+      "mean_outcome": 0.6023428571428572,
+      "mean_steps_to_success": null,
+      "reflection_trigger_rate": null,
+      "elapsed_seconds": 0.03
+    },
+    {
+      "arm": "no_memory",
+      "n_tasks": 70,
+      "success_rate": 0.0,
+      "mean_outcome": 0.6113714285714286,
+      "mean_steps_to_success": null,
+      "reflection_trigger_rate": null,
+      "elapsed_seconds": 0.02
+    }
+  ]
+}

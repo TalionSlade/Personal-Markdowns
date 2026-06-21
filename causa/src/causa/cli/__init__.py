@@ -14,6 +14,11 @@ empty so plugin discovery (and the ``causa`` console script) keeps working.
 
 from __future__ import annotations
 
-from causa.cli.main import app
-
 __all__ = ["app"]
+
+
+def __getattr__(name: str) -> object:
+    if name == "app":
+        from causa.cli.main import app  # noqa: PLC0415
+        return app
+    raise AttributeError(f"module 'causa.cli' has no attribute {name!r}")

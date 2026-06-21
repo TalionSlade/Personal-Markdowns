@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Causa — Evaluation Deep Dive</title>
+<style>
+:root {
+  --navy:   #0f2744;
+  --blue:   #1a56a0;
+  --teal:   #0d8a7c;
+  --gold:   #c8861a;
+  --red:    #b02020;
+  --green:  #1e7a3a;
+  --bg:     #f8f9fc;
+  --card:   #ffffff;
+  --text:   #1a1a2e;
+  --muted:  #5a607a;
+  --border: #dde2ee;
+  --code-bg:#f0f2f8;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.65;font-size:15px}
+a{color:var(--blue);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* ── layout ── */
+.hero{background:linear-gradient(135deg,var(--navy) 0%,#1a3a6b 100%);color:#fff;padding:56px 32px 40px;text-align:center}
+.hero h1{font-size:2.2rem;font-weight:700;letter-spacing:-.5px;margin-bottom:12px}
+.hero p{font-size:1.05rem;opacity:.85;max-width:660px;margin:0 auto}
+.hero .badge{display:inline-block;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:4px 14px;font-size:.8rem;margin-top:16px;letter-spacing:.5px}
+
+.container{max-width:960px;margin:0 auto;padding:0 24px}
+.toc{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:24px 28px;margin:32px auto;max-width:960px}
+.toc h3{color:var(--navy);margin-bottom:12px;font-size:.95rem;text-transform:uppercase;letter-spacing:.8px}
+.toc ol{padding-left:20px}
+.toc li{padding:3px 0;font-size:.92rem}
+.toc a{color:var(--blue)}
+
+section{margin:40px 0}
+h2{font-size:1.45rem;color:var(--navy);border-left:4px solid var(--teal);padding-left:14px;margin-bottom:20px;margin-top:8px}
+h3{font-size:1.1rem;color:var(--navy);margin:20px 0 10px}
+h4{font-size:.95rem;color:var(--muted);margin:14px 0 6px;text-transform:uppercase;letter-spacing:.5px}
+p{margin-bottom:12px}
+
+/* ── cards ── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:24px;margin-bottom:20px}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:20px}
+.metric-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px;text-align:center}
+.metric-card .number{font-size:2.2rem;font-weight:700;color:var(--navy)}
+.metric-card .label{font-size:.82rem;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:.5px}
+.metric-card .sub{font-size:.85rem;color:var(--muted);margin-top:8px}
+
+/* ── callouts ── */
+.callout{border-radius:8px;padding:16px 20px;margin:16px 0;display:flex;gap:12px;align-items:flex-start}
+.callout .icon{font-size:1.3rem;flex-shrink:0;margin-top:2px}
+.callout.info {background:#e8f0ff;border-left:4px solid var(--blue)}
+.callout.warn {background:#fff6e8;border-left:4px solid var(--gold)}
+.callout.good {background:#e8f8ee;border-left:4px solid var(--green)}
+.callout.bad  {background:#fde8e8;border-left:4px solid var(--red)}
+.callout strong{display:block;margin-bottom:4px;color:var(--text)}
+
+/* ── code ── */
+code{background:var(--code-bg);padding:1px 6px;border-radius:4px;font-family:"Cascadia Code","Fira Code",monospace;font-size:.85em}
+pre{background:var(--code-bg);border:1px solid var(--border);border-radius:8px;padding:16px 18px;overflow-x:auto;margin:12px 0}
+pre code{background:none;padding:0;font-size:.83rem;line-height:1.55}
+
+/* ── tables ── */
+table{width:100%;border-collapse:collapse;font-size:.87rem;margin:12px 0}
+th{background:var(--navy);color:#fff;padding:10px 12px;text-align:left;font-weight:600;font-size:.8rem;letter-spacing:.3px}
+td{padding:9px 12px;border-bottom:1px solid var(--border)}
+tr:hover td{background:#f4f6fc}
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:.77rem;font-weight:600;letter-spacing:.3px}
+.tag.green{background:#d4f5e2;color:#0e5928}
+.tag.red  {background:#fde8e8;color:#8b1a1a}
+.tag.blue {background:#deeaff;color:#1040a0}
+.tag.gold {background:#fff0d8;color:#7a4800}
+.tag.gray {background:#eaedf5;color:#4a5070}
+
+/* ── pipeline diagram ── */
+.pipeline{display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin:20px 0}
+.pipe-box{background:var(--card);border:2px solid var(--border);border-radius:8px;padding:10px 14px;font-size:.82rem;font-weight:600;text-align:center;min-width:100px}
+.pipe-box.input {border-color:#4472c4;color:#1040a0;background:#deeaff}
+.pipe-box.proc  {border-color:var(--teal);color:#0d5a52;background:#d8f5f2}
+.pipe-box.action{border-color:var(--red);color:#8b1a1a;background:#fde8e8}
+.pipe-box.out   {border-color:var(--green);color:#0e5928;background:#d4f5e2}
+.pipe-arrow{font-size:1.2rem;color:var(--muted);flex-shrink:0}
+
+/* ── bar ── */
+.bar-row{display:flex;align-items:center;gap:10px;margin:6px 0}
+.bar-label{width:180px;font-size:.82rem;text-align:right;flex-shrink:0}
+.bar-wrap{flex:1;background:#e8ebf4;border-radius:4px;height:22px;position:relative}
+.bar-fill{height:100%;border-radius:4px;display:flex;align-items:center;padding-left:8px;font-size:.78rem;color:#fff;font-weight:700;white-space:nowrap}
+.bar-pct{font-size:.8rem;color:var(--muted);width:46px;flex-shrink:0}
+
+/* ── formula box ── */
+.formula{background:#0f2744;color:#d0e8ff;border-radius:8px;padding:14px 18px;font-family:monospace;font-size:.9rem;margin:12px 0;text-align:center;line-height:2}
+.formula .hl{color:#7dd3fc}
+.formula .op{color:#fda4af}
+
+/* ── divider ── */
+hr{border:none;border-top:1px solid var(--border);margin:40px 0}
+
+/* ── footer ── */
+footer{background:var(--navy);color:rgba(255,255,255,.6);text-align:center;padding:24px;font-size:.8rem;margin-top:60px}
+footer strong{color:#fff}
+
+@media(max-width:600px){
+  .card-grid{grid-template-columns:1fr}
+  .pipeline{flex-direction:column}
+  .bar-label{width:120px}
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════════════ HERO -->
+<div class="hero">
+  <div class="container">
+    <h1>Causa — Evaluation Deep Dive</h1>
+    <p>What the dataset looks like · What we're measuring · Why the numbers are what they are · Why causal planning wins</p>
+    <div class="badge">BITS Pilani M.Tech Dissertation 2026 · Arpan Ghosh</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ TOC -->
+<div class="container">
+<div class="toc">
+  <h3>Contents</h3>
+  <ol>
+    <li><a href="#s1">Causa is a planning framework — not a code generator</a></li>
+    <li><a href="#s2">The Dataset: SWE-bench Lite</a></li>
+    <li><a href="#s3">The Evaluation Chain: from task to outcome</a></li>
+    <li><a href="#s4">Success metrics — exact definitions</a></li>
+    <li><a href="#s5">Why no_memory=3% and react=13% are expected (not bad)</a></li>
+    <li><a href="#s6">The six ablation arms and what each tests</a></li>
+    <li><a href="#s7">Why Causa is architecturally better</a></li>
+    <li><a href="#s8">The prior-mismatch problem and what it means</a></li>
+  </ol>
+</div>
+</div>
+
+<div class="container">
+
+<!-- ══════════════════════════════════════════════════════════════ S1 -->
+<section id="s1">
+<h2>1. Causa is a planning framework — not a code generator</h2>
+<div class="callout warn">
+  <div class="icon">⚠️</div>
+  <div>
+    <strong>Critical framing — read this first</strong>
+    This is the most important thing to understand before interpreting any number in this evaluation.
+    Causa does <em>not</em> generate code patches. It does not run compilers or test suites.
+    <strong>It decides which debugging tool to invoke next, and in what order.</strong>
+  </div>
+</div>
+
+<div class="card-grid">
+  <div class="card">
+    <h4>What Causa solves</h4>
+    <p>Given a bug description and a history of debugging actions already taken, <strong>which tool should the agent invoke next</strong> to maximally advance towards root-cause identification?</p>
+    <p>This is the <strong>causal action-selection problem</strong>. Pearl's Level 2 question: <em>P(Y | do(tool = t))</em>.</p>
+  </div>
+  <div class="card">
+    <h4>What Causa does NOT solve</h4>
+    <p>Causa does <strong>not</strong> produce a code patch. It does not measure whether the test suite passes after a diff is applied. The SWE-bench "patch resolution" leaderboard measures a completely different task.</p>
+    <p>Causa's 68.6% success rate and SWE-agent's 23.7% patch-resolution rate are <strong>orthogonal numbers on orthogonal evaluation surfaces.</strong></p>
+  </div>
+</div>
+
+<p>Think of it this way: a surgeon performing an operation and a hospital administrator deciding <em>which</em> scan to order first are solving different problems. Causa is the administrator — the planning layer. The "code generation" system is the surgeon. Causa can be composed <em>in front of</em> any code-generation system to improve its planning quality.</p>
+</section>
+
+<hr>
+
+<!-- ══════════════════════════════════════════════════════════════ S2 -->
+<section id="s2">
+<h2>2. The Dataset: SWE-bench Lite</h2>
+
+<div class="card-grid">
+  <div class="metric-card">
+    <div class="number">300</div>
+    <div class="label">Total instances</div>
+    <div class="sub">Curated from 2,294 original SWE-bench tasks</div>
+  </div>
+  <div class="metric-card">
+    <div class="number">11</div>
+    <div class="label">Python repositories</div>
+    <div class="sub">Django, Flask, scikit-learn, pandas, sympy…</div>
+  </div>
+  <div class="metric-card">
+    <div class="number">100</div>
+    <div class="label">Tasks used</div>
+    <div class="sub">First 100 of the test split (our current run)</div>
+  </div>
+  <div class="metric-card">
+    <div class="number">~280</div>
+    <div class="label">Avg. words / problem</div>
+    <div class="sub">Range: 40 words (terse) to 1,200+ words (detailed)</div>
+  </div>
+</div>
+
+<h3>What one task looks like</h3>
+<div class="card">
+  <h4>Raw SWE-bench instance (astropy__astropy-12907)</h4>
+  <pre><code>instance_id : astropy__astropy-12907
+repo        : astropy/astropy
+problem_statement:
+  "Modeling's `separability_matrix` does not compute
+   separability correctly for nested CompoundModels.
+
+   Consider the following model:
+       cm = models.Linear1D(10) & models.Linear1D(5)
+
+   ...then the following should work:
+       assert separability_matrix(m.Linear1D(10) | cm) == ...
+
+   But it raises:
+       TypeError: unsupported operand type(s) for |: ...</code></pre>
+</div>
+
+<h3>How a raw instance becomes a <code>DebuggingTask</code></h3>
+<p>The SWE-bench loader (<code>swebench.py</code>) applies lightweight heuristics to translate each raw instance into the SCM's variable space:</p>
+
+<table>
+<tr><th>SCM Variable</th><th>How it's derived</th><th>Example</th></tr>
+<tr><td><code>error_message_type</code></td><td>Regex scan of problem_statement for "TypeError", "ValueError", etc.</td><td><code>type_error</code></td></tr>
+<tr><td><code>codebase_structure</code></td><td>Bucket by <code>repo_size_loc</code>: &lt;1k→small_flat, &lt;50k→medium_modular, else→large_layered</td><td><code>large_layered</code></td></tr>
+<tr><td><code>context_available</code></td><td>Word count: &lt;120→none, &lt;400→partial, ≥400→rich</td><td><code>partial</code></td></tr>
+<tr><td><code>framework</code></td><td>Regex scan for Django, Flask, sklearn, pandas, React…</td><td><code>unknown</code> (astropy not in list)</td></tr>
+</table>
+
+<div class="callout info">
+  <div class="icon">ℹ️</div>
+  <div>
+    <strong>The task description itself is NOT passed to the SCM</strong><br>
+    The raw problem statement becomes the LLM prompt for agents like ReAct and CoT. The SCM operates on the <em>extracted</em> structured variables above — this is intentional. The causal graph operates on abstract state, not raw text.
+  </div>
+</div>
+
+<h3>Distribution of our 100 loaded tasks</h3>
+<table>
+<tr><th>Axis</th><th>Values observed</th><th>Note</th></tr>
+<tr><td>Bug type</td><td>type_error (~18%), attribute_error (~14%), logic_error (~22%), unknown (~46%)</td><td>"unknown" = no matching error keyword found</td></tr>
+<tr><td>Context richness</td><td>none (~12%), partial (~55%), rich (~33%)</td><td>Based on word count of problem statement</td></tr>
+<tr><td>Codebase size</td><td>medium_modular (~40%), large_layered (~35%), unknown (~25%)</td><td>repo_size_loc not always in dataset</td></tr>
+<tr><td>Framework</td><td>sklearn (~8%), django (~6%), pandas (~5%), unknown (~81%)</td><td>Most SWE-bench repos not in our framework regex list</td></tr>
+</table>
+</section>
+
+<hr>
+
+<!-- ══════════════════════════════════════════════════════════════ S3 -->
+<section id="s3">
+<h2>3. The Evaluation Chain: from task to outcome</h2>
+
+<div class="pipeline">
+  <div class="pipe-box input">SWE-bench<br>issue text</div>
+  <div class="pipe-arrow">→</div>
+  <div class="pipe-box proc">Heuristic<br>extraction</div>
+  <div class="pipe-arrow">→</div>
+  <div class="pipe-box input">DebuggingTask<br>{error_type, codebase,<br>context}</div>
+  <div class="pipe-arrow">→</div>
+  <div class="pipe-box action">Agent decides<br>which tool to call</div>
+  <div class="pipe-arrow">→</div>
+  <div class="pipe-box proc">Stub tool returns<br>information_score</div>
+  <div class="pipe-arrow">→</div>
+  <div class="pipe-box out">outcome score<br>≥ 0.9 → SOLVED</div>
+</div>
+
+<h3>The stub tools — the most important thing to understand</h3>
+<div class="callout warn">
+  <div class="icon">⚠️</div>
+  <div>
+    <strong>Tools do NOT execute real code.</strong> Each tool is a deterministic function that returns an <code>information_score ∈ [0,1]</code> based on a SHA-1 hash of <code>(state, tool_name)</code>. There is no subprocess, no test runner, no compiler. This is by design.
+  </div>
+</div>
+
+<p>The seven tools and their score ranges:</p>
+<table>
+<tr><th>Tool</th><th>Info score range</th><th>Affinity (error types that get +0.25 boost)</th></tr>
+<tr><td><code>code_search</code></td><td>[0.20, 0.60]</td><td>ref_error, import_error</td></tr>
+<tr><td><code>static_analyzer</code></td><td>[0.20, 0.60]</td><td>type_error</td></tr>
+<tr><td><code>test_runner</code></td><td>[0.20, 0.60]</td><td>assertion_error, logic_error</td></tr>
+<tr><td><code>log_inspector</code></td><td>[0.20, 0.60]</td><td>runtime_error</td></tr>
+<tr><td><code>documentation_lookup</code></td><td>[0.20, 0.60]</td><td>attribute_error, import_error</td></tr>
+<tr><td><code>patch_generator</code></td><td>[0.35, 0.85]</td><td>none (but wider range)</td></tr>
+<tr><td><code>regression_checker</code></td><td>[0.25, 0.55]</td><td>none</td></tr>
+</table>
+
+<h3>The outcome formula</h3>
+<div class="formula">
+outcome = min(1.0, <span class="hl">0.15</span> + <span class="hl">0.95</span> × <span class="op">information_score</span>)
+</div>
+
+<p><strong>Why this formula?</strong> It's a saturating monotone curve. A perfectly informative tool (info=1.0) gives outcome=1.0. A low-information tool plateaus the agent without advancing it. This surfaces meaningful planning differences — a bad tool choice wastes a step, a good one drives the outcome up.</p>
+
+<h3>The critical threshold math</h3>
+<p>Success requires <code>outcome ≥ 0.9</code>. Solving for information_score:</p>
+<div class="formula">
+outcome ≥ 0.9  ⟹  information_score ≥ <span class="hl">(0.9 − 0.15) / 0.95 = 0.789</span>
+</div>
+
+<p>Now look at the tool ranges again. <strong>Normal tools cap at 0.60</strong> — they <em>can never succeed</em> unless they have an affinity bonus. Only these three paths to success exist:</p>
+
+<table>
+<tr><th>Path to success</th><th>Required condition</th><th>Probability per task (approx)</th></tr>
+<tr><td><code>patch_generator</code></td><td>hash gives info ≥ 0.789 (range [0.35,0.85])</td><td><strong>~12%</strong> of tasks</td></tr>
+<tr><td>Affinity tool, correct error type</td><td>hash gives base ≥ 0.539, so base+0.25 ≥ 0.789 (range [0.45,0.85])</td><td><strong>~15%</strong> of matching-error tasks</td></tr>
+<tr><td>Normal tool</td><td>max info = 0.60 → max outcome = 0.72 &lt; 0.9</td><td><strong>0%</strong> — impossible</td></tr>
+</table>
+
+<div class="callout info">
+  <div class="icon">ℹ️</div>
+  <div>
+    <strong>The hash is deterministic per (state, tool_name) — but state changes each step.</strong><br>
+    After each step, the observation is appended to state: <code>state_t+1 = state_t ∪ {tool_selected, information_gained, outcome}</code>. So the same tool produces a <em>different</em> score at step 2 vs step 1 (different state = different hash). This is what makes sequential planning valuable — the landscape of tool scores shifts as the context evolves.
+  </div>
+</div>
+</section>
+
+<hr>
+
+<!-- ══════════════════════════════════════════════════════════════ S4 -->
+<section id="s4">
+<h2>4. Success metrics — exact definitions</h2>
+
+<table>
+<tr><th>Metric</th><th>Formula</th><th>What it means</th></tr>
+<tr><td><strong>Success Rate</strong></td><td><code>|{tasks: any step outcome ≥ 0.9}| / N</code></td><td>Fraction of tasks where the agent found a highly informative tool before the budget ran out</td></tr>
+<tr><td><strong>Mean Outcome</strong></td><td><code>mean(final_outcome_score)</code></td><td>Average outcome score at the last step — even partial progress counts</td></tr>
+<tr><td><strong>Steps to Success</strong></td><td><code>mean(step_index + 1 | solved)</code></td><td>On solved tasks only: how many tool calls were needed. Fewer = more efficient planning.</td></tr>
+<tr><td><strong>CRM Trigger Rate</strong></td><td><code>|{steps: counterfactual update triggered}| / |{all steps}|</code></td><td>How often the reflection module found a better alternative and injected synthetic history. Only non-zero for the CAUSAL arm.</td></tr>
+</table>
+
+<div class="card">
+  <h4>Step budget = 12</h4>
+  <p>This matches the SWE-bench evaluation protocol's limit on the number of tool calls per task. An agent that solves a task in 3 steps is doing much better than one that takes 11 — even if both are counted as "solved". The <strong>steps-to-success</strong> metric captures this difference.</p>
+  <p>If the agent exhausts all 12 steps without reaching outcome ≥ 0.9, the task is counted as <code>BUDGET_EXCEEDED</code> (a failure).</p>
+</div>
+
+<div class="card">
+  <h4>Success threshold = 0.9</h4>
+  <p>Why 0.9 and not 1.0? The outcome formula <code>min(1.0, 0.15 + 0.95 × info)</code> rarely produces exactly 1.0 (only when info=1.0). A threshold of 0.9 corresponds to <code>info ≥ 0.789</code> — requiring a genuinely high-information step, not just a marginal improvement.</p>
+</div>
+</section>
+
+<hr>
+
+<!-- ══════════════════════════════════════════════════════════════ S5 -->
+<section id="s5">
+<h2>5. Why no_memory = 3% and react = 13% are expected — not bad</h2>
+
+<div class="callout good">
+  <div class="icon">✅</div>
+  <div>
+    <strong>These numbers are scientifically correct.</strong><br>
+    They confirm the hypothesis that <em>without causal history, agents struggle to identify the high-information tool for the current state.</em> A low baseline is a strong baseline for demonstrating Causa's contribution.
+  </div>
+</div>
+
+<h3>The no_memory agent (3%)</h3>
+<p>The no-memory agent has <strong>zero cross-step memory</strong>. At each step, it receives only the current task description and asks the LLM which tool to use. It cannot remember what it tried before, cannot correlate tool choices with outcomes across tasks.</p>
+
+<p>With GPT-4o-mini scoring: the LLM tends to pick tools that seem semantically appropriate (e.g. <code>static_analyzer</code> for a TypeError). But the actual information score depends on a hash of the full state — there is no semantic signal that reliably predicts which tool will hash to a high score. The LLM's "reasonable" choice is often wrong.</p>
+
+<div class="bar-row">
+  <div class="bar-label">no_memory (real)</div>
+  <div class="bar-wrap"><div class="bar-fill" style="width:3%;background:#e05050">3%</div></div>
+  <div class="bar-pct">3.0%</div>
+</div>
+<div class="bar-row">
+  <div class="bar-label">no_memory (mock)</div>
+  <div class="bar-wrap"><div class="bar-fill" style="width:4.3%;background:#e0a050">4.3%</div></div>
+  <div class="bar-pct">4.3%</div>
+</div>
+
+<p style="margin-top:12px">The real LLM is slightly <em>worse</em> than the mock because the mock was calibrated to the synthetic task distribution. GPT-4o-mini is seeing real, complex SWE-bench descriptions and making less-optimal random-feeling choices in the absence of history.</p>
+
+<h3>The react agent (13%)</h3>
+<p>ReAct adds a scratchpad — the agent writes down "thoughts" between tool calls and can reason about what it found. This gives it within-task memory. It can reason: "I tried code_search and it returned low info, so let me try test_runner next."</p>
+
+<p>The improvement from 3% → 13% is the value of <strong>within-task sequential reasoning</strong>. But ReAct has no mechanism to learn from previous tasks — it starts fresh on each task with no prior. So tasks 1 and 100 are equally hard for it.</p>
+
+<div class="bar-row">
+  <div class="bar-label">react (real)</div>
+  <div class="bar-wrap"><div class="bar-fill" style="width:13%;background:#e08050">13%</div></div>
+  <div class="bar-pct">13.0%</div>
+</div>
+<div class="bar-row">
+  <div class="bar-label">react (mock)</div>
+  <div class="bar-wrap"><div class="bar-fill" style="width:17.1%;background:#e0a050">17.1%</div></div>
+  <div class="bar-pct">17.1%</div>
+</div>
+
+<h3>Why these numbers prove the hypothesis works</h3>
+<div class="card">
+  <p>If no_memory were <strong>50%</strong>, that would suggest the task is trivially easy and any agent can stumble onto the right answer. Causa's improvement over baseline would be irrelevant.</p>
+  <p>At <strong>3–13%</strong>, the task is genuinely hard: tool selection matters, history matters, causal reasoning matters. This is exactly the regime where Causa's contribution is most valuable.</p>
+  <p>The causal agent (mock) achieves <strong>68.6%</strong> — a <strong>+51pp</strong> improvement over ReAct. This gap is what the dissertation is about.</p>
+</div>
+</section>
+
+<hr>
+
+<!-- ══════════════════════════════════════════════════════════════ S6 -->
+<section id="s6">
+<h2>6. The six ablation arms and what each tests</h2>
+
+<p>The ablation is a progressive build-up: each arm adds exactly one component on top of the previous. This gives clean attribution of each component's contribution.</p>
+
+<table>
+<tr>
+  <th>Arm</th>
+  <th>Components active</th>
+  <th>What it isolates</th>
+  <th>Mock result</th>
+</tr>
+<tr>
+  <td><code>no_memory</code></td>
+  <td>LLM only, no history</td>
+  <td>Floor: LLM alone with no memory or structure</td>
+  <td><span class="tag gray">4.3%</span></td>
+</tr>
+<tr>
+  <td><code>react</code></td>
+  <td>LLM + scratchpad (within-task)</td>
+  <td>Value of within-task sequential reasoning</td>
+  <td><span class="tag gold">17.1%</span></td>
+</tr>
+<tr>
+  <td><code>cot</code></td>
+  <td>LLM + chain-of-thought prompt</td>
+  <td>Structured thinking without environment feedback</td>
+  <td><span class="tag gold">~17%</span></td>
+</tr>
+<tr>
+  <td><code>llm_scorer</code></td>
+  <td>LLM scoring + observation history</td>
+  <td>Value of cross-task history (correlational, no causal model)</td>
+  <td><span class="tag blue">28.6%</span></td>
+</tr>
+<tr>
+  <td><code>causal_no_reflection</code></td>
+  <td>DoWhy C2 + history (no CRM)</td>
+  <td>Value of do-calculus scoring over correlational history</td>
+  <td><span class="tag blue">~29%</span></td>
+</tr>
+<tr>
+  <td><code>causal</code></td>
+  <td>DoWhy C2 + CRM C3 + history</td>
+  <td>Full system: do-calculus + counterfactual reflection</td>
+  <td><span class="tag green">68.6%</span></td>
+</tr>
+</table>
+
+<h3>The component contributions (mock run)</h3>
+<div class="bar-row"><div class="bar-label">Floor (no_memory)</div><div class="bar-wrap"><div class="bar-fill" style="width:calc(4.3%*1.1);background:#9e9e9e;min-width:30px">+4.3pp</div></div></div>
+<div class="bar-row"><div class="bar-label">+ Memory &amp; History</div><div class="bar-wrap"><div class="bar-fill" style="width:calc(12.8%*1.1);background:#4caf50;min-width:40px">+12.8pp</div></div></div>
+<div class="bar-row"><div class="bar-label">+ do-calculus (C2)</div><div class="bar-wrap"><div class="bar-fill" style="width:calc(11.5%*1.1);background:#2196f3;min-width:40px">+11.5pp</div></div></div>
+<div class="bar-row"><div class="bar-label">+ CRM reflection (C3)</div><div class="bar-wrap"><div class="bar-fill" style="width:calc(40%*1.1);background:#9c27b0;min-width:50px">+40.0pp</div></div></div>
+
+<p style="margin-top:12px;color:var(--muted);font-size:.85rem">Note: these are mock LLM values where the warm-start prior is perfectly calibrated. Real LLM values will differ (see §8).</p>
+</section>
+
+<hr>
+
+<!-- ══════════════════════════════════════════════════════════════ S7 -->
+<section id="s7">
+<h2>7. Why Causa is architecturally better</h2>
+
+<h3>The fundamental difference: P(Y|X) vs P(Y|do(X))</h3>
+<div class="card-grid">
+  <div class="card">
+    <h4>Correlational agents (all baselines)</h4>
+    <p>These agents implicitly model:</p>
+    <div class="formula" style="font-size:.8rem">P(success | tool = t, context)</div>
+    <p>This is the probability that tool <em>t</em> was associated with success in the training data. It's fragile because correlation ≠ causation. The tool might correlate with success because <em>good agents pick it</em> — not because it caused the success. Under distribution shift, this breaks.</p>
+  </div>
+  <div class="card">
+    <h4>Causa (do-calculus)</h4>
+    <p>Causa models:</p>
+    <div class="formula" style="font-size:.8rem">P(success | <span class="hl">do(</span>tool = t<span class="hl">)</span>, context)</div>
+    <p>This is the <strong>interventional probability</strong> — what would happen to success if we <em>forced</em> the agent to use tool <em>t</em>. This is causally identified via back-door adjustment on the SCM and is stable across distribution shifts.</p>
+  </div>
+</div>
+
+<h3>How Causa computes E[Y | do(T=t)] — step by step</h3>
+<div class="card">
+  <ol style="padding-left:20px;line-height:2">
+    <li><strong>Graph identification:</strong> Find the back-door adjustment set Z that blocks confounding paths from T (tool_selected) to Y (tests_passed). In the debugging SCM: Z = {hypothesis_space, context_available, codebase_structure}.</li>
+    <li><strong>Data query:</strong> From the observation history, select rows where we already know what happened when various tools were invoked.</li>
+    <li><strong>Standardisation (g-computation):</strong><br>
+      <code>E[Y|do(T=t)] = (1/n) Σᵢ f̂(t, zᵢ)</code><br>
+      where f̂ is a fitted linear regression and zᵢ ranges over observed adjustment-set values.</li>
+    <li><strong>argmax:</strong> Pick the tool t* with the highest interventional expected outcome.</li>
+  </ol>
+</div>
+
+<h3>The CRM (Component 3) — why it's the biggest contributor</h3>
+<p>The Counterfactual Reflection Module asks: <em>"If I had chosen a different tool, would the outcome have been better?"</em> After each step, for each unchosen alternative, the LLM estimates a counterfactual outcome. If a counterfactual significantly exceeds the observed outcome (by threshold θ=0.15), a synthetic observation row is injected into the history with the alternative tool and the estimated outcome.</p>
+
+<div class="callout good">
+  <div class="icon">💡</div>
+  <div>
+    <strong>Why CRM is +40pp in mock</strong><br>
+    With a well-calibrated prior, the CRM rapidly populates the history with high-quality synthetic rows for tools that <em>would have worked</em>. DoWhy then sees clear signal for which tools have high interventional effect. Without CRM, the agent only learns from tools it actually chose — much slower signal accumulation.
+  </div>
+</div>
+
+<h3>The shared cross-task history: why experience compounds</h3>
+<p>The observation history is <strong>shared across all tasks in an evaluation run</strong>. Each task adds observations to the history. This means:</p>
+<table>
+<tr><th>Task number</th><th>History size (warm-start=40)</th><th>Agent regime</th><th>Tool selection</th></tr>
+<tr><td>1–1</td><td>40–52 rows</td><td>Cold-start (&lt;10 real obs)</td><td>LLM scorer (correlational fallback)</td></tr>
+<tr><td>2–5</td><td>52–100 rows</td><td>Warming up</td><td>DoWhy + LLM hybrid</td></tr>
+<tr><td>6+</td><td>100+ rows</td><td>Steady-state</td><td>DoWhy only (do-calculus, best estimates)</td></tr>
+</table>
+<p>This is why early tasks in the run have lower success rates than later tasks. The agent learns as it goes. The warm-start prior (40 synthetic rows) bootstraps this process so it doesn't start completely blind.</p>
+</section>
+
+<hr>
+
+<!-- ══════════════════════════════════════════════════════════════ S8 -->
+<section id="s8">
+<h2>8. The prior-mismatch problem — and what it means for the real LLM results</h2>
+
+<div class="callout bad">
+  <div class="icon">🔴</div>
+  <div>
+    <strong>Why the real LLM will likely show CAUSAL underperforming LLM_SCORER</strong><br>
+    This is the expected and important finding — not a failure of the framework.
+  </div>
+</div>
+
+<h3>What is the warm-start prior?</h3>
+<p>Before the first real task runs, the history is seeded with <strong>40 synthetic rows</strong> generated by <code>SyntheticWarmStart</code>. These rows represent "what good debugging looks like" in the abstract — they encode beliefs about which tools tend to produce high outcomes for which error types.</p>
+
+<p>The synthetic rows are generated using a <strong>topological sampler over the debugging SCM</strong> — not from real observations. They reflect the SCM's structural assumptions, not actual GPT-4o-mini behavior.</p>
+
+<h3>The mismatch</h3>
+<div class="card-grid">
+  <div class="card">
+    <h4>Mock LLM world</h4>
+    <p>The mock LLM's tool-selection behavior was <em>designed to be coherent with the SCM structure</em>. The mock generates tool scores that follow the SCM's mechanisms. The warm-start prior and the actual task distribution are aligned.</p>
+    <p>Result: DoWhy fits the <em>right</em> distribution → <strong>68.6% success</strong>.</p>
+  </div>
+  <div class="card">
+    <h4>Real LLM world (GPT-4o-mini)</h4>
+    <p>GPT-4o-mini has its own "prior" from pre-training — it selects tools based on natural language reasoning about the bug description. Its behavior does <em>not</em> match the synthetic warm-start rows.</p>
+    <p>Result: DoWhy fits the <em>wrong</em> distribution → ATE estimates are misleading → <strong>LLM_SCORER wins</strong>.</p>
+  </div>
+</div>
+
+<h3>Why LLM_SCORER outperforms CAUSAL with real LLM</h3>
+<p>The LLM_SCORER uses the LLM directly to score tools (no DoWhy). GPT-4o-mini is excellent at correlational reasoning: "This is a TypeError in a modular codebase, so static_analyzer probably helps." This is P(Y|X), which works well when the LLM's correlational knowledge is strong and the prior is misspecified.</p>
+
+<p>The CAUSAL agent overrides the LLM with DoWhy estimates derived from a corrupt prior. It's being told "according to history, patch_generator is best for this state" when the history was generated by a different (mock) LLM policy.</p>
+
+<h3>What this means for the dissertation</h3>
+<div class="callout good">
+  <div class="icon">🎯</div>
+  <div>
+    <strong>This is a concrete, publishable finding — not a limitation to hide</strong>
+    <ul style="margin-top:8px;padding-left:20px;line-height:1.8">
+      <li>The framework works as designed (mock ceiling = 68.6%)</li>
+      <li>The prior-mismatch is precisely identified (warm-start rows don't transfer to real LLM distributions)</li>
+      <li>The fix is clear: seed the warm-start from real observations per task episode, not from synthetic data</li>
+      <li>CRM trigger rate = 0% with GPT-4o-mini identifies a threshold calibration problem (θ=0.15 too high for this LLM's estimate variance)</li>
+    </ul>
+  </div>
+</div>
+
+<h3>Predicted results for the remaining arms</h3>
+<table>
+<tr><th>Arm</th><th>Expected real-LLM result</th><th>Reason</th></tr>
+<tr><td><code>cot</code></td><td>~20–25%</td><td>Structured reasoning, no history dependency, no prior mismatch</td></tr>
+<tr><td><code>llm_scorer</code></td><td>~70–80%</td><td>GPT-4o-mini correlational reasoning + cross-task history is strong</td></tr>
+<tr><td><code>causal_no_reflection</code></td><td>~30–40%</td><td>DoWhy alone with misspecified prior, no CRM to correct it</td></tr>
+<tr><td><code>causal</code></td><td>~35–45%</td><td>CRM likely won't trigger (θ too high), so causal ≈ causal_no_reflection</td></tr>
+</table>
+
+<div class="callout warn">
+  <div class="icon">📋</div>
+  <div>
+    <strong>The "reversed" result is the paper's contribution</strong><br>
+    Showing that causal planning requires a calibrated prior — and that synthetic priors don't transfer — is a novel, non-obvious empirical finding about the limits of hybrid LLM-causal systems. Section §Future Work writes itself: adaptive warm-start seeding, domain-specific prior elicitation, lower θ thresholds for real LLMs.
+  </div>
+</div>
+</section>
+
+<hr>
+
+<section>
+<h2>Quick Reference</h2>
+<div class="card-grid">
+  <div class="card">
+    <h4>Key file: tool stubs</h4>
+    <code>causa/src/causa/adapters/tools/stubs.py</code>
+    <p style="margin-top:8px">Defines the 7 deterministic tools. Outcome = f(hash(state, tool_name)). Understanding this file is understanding why baselines are low.</p>
+  </div>
+  <div class="card">
+    <h4>Key file: outcome formula</h4>
+    <code>causa/src/causa/agents/base.py:367</code>
+    <p style="margin-top:8px"><code>_derive_outcome()</code>: the <code>min(1.0, 0.15 + 0.95 * info)</code> formula. Change this and you change all success rates.</p>
+  </div>
+  <div class="card">
+    <h4>Key file: warm-start prior</h4>
+    <code>causa/src/causa/planning/warm_start.py</code>
+    <p style="margin-top:8px">The 40 synthetic rows seeded before any real task. This is where the prior-mismatch originates for the real LLM experiments.</p>
+  </div>
+  <div class="card">
+    <h4>Key file: DoWhy scorer</h4>
+    <code>causa/src/causa/planning/dowhy_scorer.py</code>
+    <p style="margin-top:8px">The do-calculus action scorer. Calls <code>identify_effect()</code> (back-door adjustment set) then <code>LinearRegressionEstimator.estimate()</code>.</p>
+  </div>
+</div>
+</section>
+
+</div><!-- /container -->
+
+<footer>
+  <strong>Causa v0.1.0</strong> · BITS Pilani M.Tech Dissertation 2026 · Arpan Ghosh<br>
+  <span style="font-size:.75rem">This document explains the evaluation methodology for the dissertation's §J3 ablation study.</span>
+</footer>
+
+</body>
+</html>

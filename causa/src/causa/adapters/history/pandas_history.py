@@ -32,6 +32,7 @@ class PandasObservationHistory:
 
     def __init__(self, *, schema: Iterable[str] | None = None) -> None:
         self._schema: list[str] | None = list(schema) if schema is not None else None
+        self._schema_explicit: bool = schema is not None
         self._rows: list[dict[str, Any]] = []
         self._df_cache: pd.DataFrame | None = None
 
@@ -61,14 +62,12 @@ class PandasObservationHistory:
     # ── writes ─────────────────────────────────────────────────────────────
 
     def append(self, observation: dict[str, Any]) -> None:
-        self._validate(observation)
-        self._rows.append(dict(observation))
+        self._rows.append(self._validate(observation))
         self._df_cache = None
 
     def append_many(self, observations: list[dict[str, Any]]) -> None:
-        for o in observations:
-            self._validate(o)
-        self._rows.extend(dict(o) for o in observations)
+        rows = [self._validate(o) for o in observations]
+        self._rows.extend(rows)
         self._df_cache = None
 
     def clear(self) -> None:
@@ -77,16 +76,29 @@ class PandasObservationHistory:
 
     # ── helpers ────────────────────────────────────────────────────────────
 
-    def _validate(self, observation: dict[str, Any]) -> None:
+    def _validate(self, observation: dict[str, Any]) -> dict[str, Any]:
         if self._schema is None:
             self._schema = list(observation.keys())
-            return
-        if set(observation.keys()) != set(self._schema):
-            missing = set(self._schema) - set(observation.keys())
-            extra = set(observation.keys()) - set(self._schema)
-            raise ValueError(
-                f"observation schema mismatch: missing={missing}, extra={extra}"
-            )
+            return dict(observation)
+        obs_keys = set(observation.keys())
+        schema_keys = set(self._schema)
+        extra = obs_keys - schema_keys
+        if extra:
+            raise ValueError(f"observation schema mismatch: extra={extra}")
+        missing = schema_keys - obs_keys
+        if missing:
+            if not self._schema_explicit:
+                raise ValueError(
+                    f"observation schema mismatch: missing={missing}, extra=set()"
+                )
+            # Pre-declared schema: fill missing columns with NaN so partial
+            # observations (e.g. base-agent steps that omit latent mediators)
+            # are stored without crashing; the estimator's NaN mask drops them.
+            padded = dict(observation)
+            for col in missing:
+                padded[col] = float("nan")
+            return padded
+        return dict(observation)
 
     def __repr__(self) -> str:
         return f"PandasObservationHistory(n={self.n_observations}, schema={self._schema})"

@@ -15,6 +15,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class LLMProvider(str, Enum):
     ANTHROPIC = "anthropic"
+    OPENAI = "openai"
     MOCK = "mock"
 
 
@@ -57,6 +58,8 @@ class CausaSettings(BaseSettings):
     # ── Decision loop ──────────────────────────────────────────────────────
     step_budget: int = Field(default=12, ge=1)
     """Per-task tool-call budget; matches the SWE-bench protocol."""
+    success_threshold: float = Field(default=0.9, ge=0.0, le=1.0)
+    """Outcome score at or above which a task is considered solved."""
 
     # ── Telemetry ──────────────────────────────────────────────────────────
     trace_dir: Path = Field(default=Path("traces"))

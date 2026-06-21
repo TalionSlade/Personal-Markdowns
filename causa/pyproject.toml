@@ -64,6 +64,9 @@ dev = [
   "mypy>=1.10",
   "ipykernel>=6.29",
 ]
+openai = [
+  "openai>=1.30",
+]
 swebench = [
   "datasets>=2.18",
 ]

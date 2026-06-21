@@ -61,10 +61,13 @@ class LinearRegressionEstimator:
 
         features = [treatment, *sorted(adjustment_set)]
         x_raw = data[features].copy()
-        y = pd.to_numeric(data[outcome], errors="coerce").to_numpy()
+        # Map canonical binary labels to numeric before coercion.
+        outcome_col = data[outcome].replace({"pass": 1, "fail": 0, "yes": 1, "no": 0})
+        y = pd.to_numeric(outcome_col, errors="coerce").to_numpy()
 
-        # One-hot encode any object/categorical feature for OLS.
-        cat_cols = [c for c in features if x_raw[c].dtype == object]
+        # One-hot encode any non-numeric feature for OLS.
+        # pd 2.x uses pd.StringDtype (not object) for string columns.
+        cat_cols = [c for c in features if not pd.api.types.is_numeric_dtype(x_raw[c])]
         num_cols = [c for c in features if c not in cat_cols]
         if cat_cols:
             enc = OneHotEncoder(handle_unknown="ignore", sparse_output=False)

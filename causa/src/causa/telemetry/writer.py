@@ -98,7 +98,7 @@ class TraceWriter:
 
     def finish(self, *, extra: dict[str, Any] | None = None) -> None:
         """Write the ``run_finished`` framing event and close the file."""
-        if not self._started:
+        if not self._started or self._handle is None:
             return
         self._write_event(build_run_event(
             kind="run_finished",

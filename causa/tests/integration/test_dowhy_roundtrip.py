@@ -39,7 +39,10 @@ from causa.ports.scorer import ActionCandidate
 def _synth_3node_data(n: int = 800, seed: int = 0) -> pd.DataFrame:
     rng = np.random.default_rng(seed)
     z = rng.integers(0, 2, size=n)
-    x = z.copy()
+    # X is stochastically influenced by Z (not deterministic) to avoid
+    # perfect multicollinearity in the back-door OLS adjustment.
+    p_x = np.where(z == 1, 0.8, 0.2)
+    x = (rng.random(size=n) < p_x).astype(int)
     y = 0.5 * x + 0.3 * z + rng.normal(0, 0.05, size=n)
     return pd.DataFrame({"Z": z.astype(str), "X": x.astype(str), "Y": y})
 

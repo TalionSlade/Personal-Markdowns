@@ -77,7 +77,7 @@ def scm_show(
         }, indent=2))
         return
 
-    table = Table(title=f"SCM: {scm.name}", show_lines=True)
+    table = Table(title=f"SCM: {scm.metadata.get('name', 'debugging_scm')}", show_lines=True)
     table.add_column("Variable", style="bold")
     table.add_column("Role")
     table.add_column("Domain")
@@ -88,11 +88,12 @@ def scm_show(
         table.add_row(name, v.role.value, v.domain.value, levels)
     console.print(table)
 
-    edge_table = Table(title="Edges (8)", show_lines=False)
+    all_edges = list(scm.graph.edges) if not callable(scm.graph.edges) else list(scm.graph.edges())
+    edge_table = Table(title=f"Edges ({len(all_edges)})", show_lines=False)
     edge_table.add_column("Source")
     edge_table.add_column("Target")
     edge_table.add_column("Semantics", overflow="fold")
-    for e in scm.graph.edges():
+    for e in all_edges:
         edge_table.add_row(e.source, e.target, e.semantics or "—")
     console.print(edge_table)
 

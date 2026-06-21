@@ -18,6 +18,13 @@ def make_llm_client(settings: CausaSettings) -> LLMClient:
     match settings.llm_provider:
         case LLMProvider.ANTHROPIC:
             return AnthropicLLMClient(model=settings.llm_model)
+        case LLMProvider.OPENAI:
+            from causa.adapters.llm.openai_client import OpenAILLMClient  # noqa: PLC0415
+            return OpenAILLMClient(
+                model=settings.llm_model,
+                temperature=settings.llm_temperature,
+                max_tokens=settings.llm_max_tokens,
+            )
         case LLMProvider.MOCK:
             return MockLLMClient(model=f"mock-{settings.llm_model}")
         case _:  # pragma: no cover

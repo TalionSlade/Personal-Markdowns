@@ -26,7 +26,7 @@ from causa.agents.causal import CausalPlanningAgent
 from causa.agents.chain_of_thought import ChainOfThoughtAgent
 from causa.agents.no_memory import NoMemoryAgent
 from causa.agents.react import ReActAgent
-from causa.config.settings import CausaSettings, LLMProvider
+from causa.config.settings import CausaSettings
 from causa.core.scm import SCM
 from causa.domain.scm_debugging import debugging_observation_schema
 from causa.domain.tasks import DebuggingTask
@@ -70,18 +70,9 @@ class AgentArm(str, Enum):
 
 
 def build_llm(settings: CausaSettings) -> LLMClient:
-    """Build the configured LLM client (mock or Anthropic)."""
-    if settings.llm_provider is LLMProvider.MOCK:
-        from causa.adapters.llm.mock_client import MockLLMClient
-        return MockLLMClient()
-    if settings.llm_provider is LLMProvider.ANTHROPIC:  # pragma: no cover
-        from causa.adapters.llm.anthropic_client import AnthropicLLMClient
-        return AnthropicLLMClient(
-            model=settings.llm_model,
-            temperature=settings.llm_temperature,
-            max_tokens=settings.llm_max_tokens,
-        )
-    raise ValueError(f"Unknown llm_provider: {settings.llm_provider}")
+    """Build the configured LLM client (delegates to the adapter factory)."""
+    from causa.adapters.llm.factory import make_llm_client  # noqa: PLC0415
+    return make_llm_client(settings)
 
 
 def build_estimator(settings: CausaSettings):  # noqa: ANN201
@@ -128,6 +119,8 @@ def build_agent(
     # against this is one config flip away (set warm_start_prior_size=0).
     seed_warm_start(history=history, scm=scm, settings=settings)
 
+    threshold = settings.success_threshold
+
     match arm:
         case AgentArm.CAUSAL | AgentArm.CAUSAL_NO_REFLECTION:
             estimator = build_estimator(settings)
@@ -154,6 +147,7 @@ def build_agent(
                 step_budget=settings.step_budget,
                 action_variable=action_var,
                 outcome_variable=outcome_var,
+                success_threshold=threshold,
                 name=f"causa.{arm.value}",
             )
 
@@ -168,6 +162,7 @@ def build_agent(
                 step_budget=settings.step_budget,
                 action_variable=action_var,
                 outcome_variable=outcome_var,
+                success_threshold=threshold,
                 name="causa.llm_scorer",
             )
 
@@ -178,6 +173,7 @@ def build_agent(
                 step_budget=settings.step_budget,
                 action_variable=action_var,
                 outcome_variable=outcome_var,
+                success_threshold=threshold,
             )
 
         case AgentArm.COT:
@@ -187,6 +183,7 @@ def build_agent(
                 step_budget=settings.step_budget,
                 action_variable=action_var,
                 outcome_variable=outcome_var,
+                success_threshold=threshold,
             )
 
         case AgentArm.NO_MEMORY:
@@ -196,6 +193,7 @@ def build_agent(
                 step_budget=settings.step_budget,
                 action_variable=action_var,
                 outcome_variable=outcome_var,
+                success_threshold=threshold,
             )
 
 
